@@ -1,0 +1,7 @@
+0	Infinity
+1	Infinity
+2	Infinity
+3	0.0
+0	1	aa	ddd	0.0
+1	2	<eps>	eee	0.0
+2	3	dd	aaa	0.0
