@@ -1,0 +1,4 @@
+0	Infinity
+1	0.0
+0	4	inC	outD	123.0
+2	3	inA	outA	1.0
