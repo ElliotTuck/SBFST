@@ -1,9 +1,12 @@
 package test;
 
 import com.github.steveash.jopenfst.*;
+import com.github.steveash.jopenfst.io.Convert;
 
 public class Test {
     public static void main(String[] args) {
+      MutableFst originalFst = Convert.importFst("tomita2.fst");
+      System.out.println(originalFst);
 	MutableFst fst = new MutableFst();
 	// by default states are only identified by indexes assigned by the FST, if you want to instead
 	// identify your states with symbols (and read/write a state symbol table) then call this before
@@ -24,5 +27,28 @@ public class Test {
 
 	// alternatively (or if no state symbols) you can use the state instances
 	fst.addArc(startState, "inC", "outD", fst.getOrNewState("state3"), 123.0);
+
+          //1. convert from text file to fst
+          //2. fst.getStateSymbols
+          //3. create new muttable fst
+          //4. create name for start state, (concatinate all state symbols)
+          // String newState = "";
+          // List of currentStates;
+          // List nextStates;
+          // Stack states to process (newState)
+          // List processedStates
+          // while (statesToProcess != empty) {
+          //5. foreach state in currentStates {
+                  //arcs = fst.getState(stateSymbol).getArcs()
+
+                  //foreach arc in arcs
+                      // if arc.getILabel() == 1
+                      // newState.concat(arc.getNextState().getStateSymbol??())
+                      // nextStates.add(arc.getNextState())
+              //}
+              // if (processedStates(newState.name) == null)
+                  // statesToProcess.add(newState.name)
+
+          // 6.
     }
 }
