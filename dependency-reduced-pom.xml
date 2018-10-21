@@ -3,12 +3,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.elliottuck.sbfst</groupId>
   <artifactId>sbfst</artifactId>
-  <version>0.1.0</version>
+  <name>sbfst</name>
+  <version>1.0-SNAPSHOT</version>
+  <url>http://maven.apache.org</url>
   <build>
     <plugins>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>2.1</version>
+        <version>3.2.0</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -18,7 +20,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>test.Test</mainClass>
+                  <mainClass>sbfst.App</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -27,9 +29,12 @@
       </plugin>
     </plugins>
   </build>
-  <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 </project>
-
