@@ -5,7 +5,7 @@ import com.github.steveash.jopenfst.io.Convert;
 
 public class Test {
     public static void main(String[] args) {
-      MutableFst originalFst = Convert.importFst("tomita2.fst");
+      MutableFst originalFst = Convert.importFst("tomita2");
       System.out.println(originalFst);
 	MutableFst fst = new MutableFst();
 	// by default states are only identified by indexes assigned by the FST, if you want to instead
