@@ -12,8 +12,16 @@ import java.util.HashMap;
  * Main class.
  */
 public class App {
+  /*
+  *****************************
+  * IMPORTANT!!!! will need to change
+  * synMonoid state labels to comma separated
+  * list to accomodate 2+ digit state labels
+  * add determinization/minimization
+  *********************************
+  */
     public static void main(String[] args) {
-      File inputFile = new File("src/main/java/com/github/elliottuck/sbfst/tomita2.fst.txt");
+      File inputFile = new File("src/main/java/com/github/elliottuck/sbfst/tomita4.fst.txt");
       Convert.setRegexToSplitOn("\\s+");
       MutableFst originalFst = Convert.importFst(inputFile);
 
@@ -23,30 +31,17 @@ public class App {
       for (int i = 0; i < originalFst.getStateCount(); i++){
         int id = originalFst.getState(i).getId();
         idToStateOrig.put(id, originalFst.getState(i));
-        newStateName = newStateName.concat(Integer.toString(id));
+        newStateName = newStateName.concat(Integer.toString(id) + ",");
       }
-      // will need to generalize this stuff, need to extract this info from the fst object
-      //MutableSymbolTable symbolTable = new MutableSymbolTable();
-      //symbolTable.put("q", 0);
-      //symbolTable.put("r", 1);
-      //symbolTable.put("p", 2);
-      //originalFst.useStateSymbols(symbolTable);
-      //WriteableSymbolTable states = originalFst.getStateSymbols();
 
       MutableFst synMonoid = new MutableFst();
 
       synMonoid.useStateSymbols();
-      //((MutableSymbolTable)synMonoid.getStateSymbols()).getOrAdd(newStateName);
-      //System.out.println((MutableSymbolTable)synMonoid.getStateSymbols());
 
       MutableState newState = synMonoid.getOrNewState(newStateName);
 
       // currentStates is the list of the states (in order) we are testing the outgoing transitions of (from originalFst)
       ArrayList<MutableState> currentStates = new ArrayList<MutableState>();
-
-      // nextStates is where we build up the next state we will see (could be a state we have already seen)
-      // based on the states from original Fst
-      ArrayList<MutableState> nextStates = new ArrayList<MutableState>();
 
       // statesToProcess is the list of states (for new fst) we haven't processed yet/are currently processing
       ArrayList<MutableState> statesToProcess = new ArrayList<MutableState>();
@@ -57,28 +52,26 @@ public class App {
       HashMap<Integer, String> idToLabel = new HashMap<Integer, String>();
       idToLabel.put(newState.getId(), newStateName);
 
-
-
-      //for (int i = 0; i < originalFst.getStateCount(); i++){
-      //  currentStates.add(originalFst.getState(i));
-      //}
-
       statesToProcess.add(newState);
       synMonoid.setStart(newState);
       // outline of algorithm to implement
       while(statesToProcess.size() != 0){
           MutableState stateToProcess = statesToProcess.get(0);
-          //System.out.println(stateToProcess.getId());
           String label = idToLabel.get(stateToProcess.getId());
           System.out.println(label);
           ArrayList<String> newStates = new ArrayList<String>();
           currentStates.clear();
-          for (int i = 0; i < label.length(); i++){
-            String s = Character.toString(label.charAt(i));
-            currentStates.add(idToStateOrig.get(Integer.parseInt(s)));
+          for (String s: label.split(",")){
+            if(s == null){
+              continue;
+            } else{
+              currentStates.add(idToStateOrig.get(Integer.parseInt(s)));
+            }
+
           }
           //System.out.println("Current States: " + currentStates);
           for (MutableState curState: currentStates){
+            System.out.println(curState);
             List<MutableArc> arcs = curState.getArcs();
             //System.out.println(arcs.size());
             if (newStates.size() != arcs.size()){
@@ -89,16 +82,19 @@ public class App {
 
             for (int i = 0; i < arcs.size(); i++){
               MutableArc arc = arcs.get(i);
-              String creatingState = newStates.get(i).concat(Integer.toString(arc.getNextState().getId()));
-              newStates.remove(i);
-              newStates.add(i, creatingState);
+              int pos = arc.getIlabel() - 1;
+              //System.out.println("ilabel: " + pos);
+              String creatingState = newStates.get(pos).concat(Integer.toString(arc.getNextState().getId()));
+              creatingState = creatingState.concat(",");
+              newStates.remove(pos);
+              newStates.add(pos, creatingState);
               // follow a transition, see where it goes, add that state to nextStates
             }
           }
           processedStates.add(stateToProcess);
           statesToProcess.remove(stateToProcess);
           for (String nStateName: newStates){
-            //System.out.println("Found State: " + nStateName);
+            System.out.println("Found State: " + nStateName);
             MutableState nState = synMonoid.getOrNewState(nStateName);
             boolean foundProcessed = false;
             boolean foundToProcess = false;
