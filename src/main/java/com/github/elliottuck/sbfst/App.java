@@ -21,7 +21,8 @@ public class App {
   *********************************
   */
     public static void main(String[] args) {
-      File inputFile = new File("src/main/java/com/github/elliottuck/sbfst/tomita4.fst.txt");
+      String fileName = args[0];
+      File inputFile = new File(fileName);
       Convert.setRegexToSplitOn("\\s+");
       MutableFst originalFst = Convert.importFst(inputFile);
 
@@ -93,9 +94,14 @@ public class App {
           }
           processedStates.add(stateToProcess);
           statesToProcess.remove(stateToProcess);
-          for (String nStateName: newStates){
+          for (int i = 0; i < newStates.size(); i++){
+            String nStateName = newStates.get(i);
             System.out.println("Found State: " + nStateName);
+
             MutableState nState = synMonoid.getOrNewState(nStateName);
+
+            synMonoid.addArc(stateToProcess, i+1, i+1, nState, 0);
+
             boolean foundProcessed = false;
             boolean foundToProcess = false;
             for (MutableState s: processedStates){
@@ -118,6 +124,7 @@ public class App {
               statesToProcess.add(nState);
               idToLabel.put(nState.getId(), nStateName);
             }
+
           }
           // create a new state based on the names of the states we added to nextStates
           // add this state is not in processedStates, add to statesToProcess if it's not already there
@@ -125,21 +132,9 @@ public class App {
 
       }
       System.out.println(synMonoid);
-
-// old testing stuff
-	MutableFst fst = new MutableFst();
-	fst.useStateSymbols();
-
-	MutableState startState = fst.newStartState("<start>");
-
-	fst.newState("</s>").setFinalWeight(0.0);
-
-	int symbolId = fst.getInputSymbols().getOrAdd("<eps>");
-	fst.getOutputSymbols().getOrAdd("<eps>");
-
-	fst.addArc("state1", "inA", "outA", "state2", 1.0);
-	fst.addArc(startState, "inC", "outD", fst.getOrNewState("state3"), 123.0);
-
-	Convert.export(fst, "src/main/resources/test");
+      Convert.setUseSymbolIdsInText(true);
+      int index = fileName.indexOf(".fst");
+      String exportFileName = fileName.substring(0, index);
+      Convert.export(synMonoid, exportFileName + "SyntacticMonoid");
     }
 }
