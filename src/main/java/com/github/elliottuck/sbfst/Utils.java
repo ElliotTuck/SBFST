@@ -3,12 +3,15 @@ package com.github.elliottuck.sbfst;
 import com.github.steveash.jopenfst.Fst;
 import com.github.steveash.jopenfst.State;
 import com.github.steveash.jopenfst.Arc;
+import com.github.steveash.jopenfst.SymbolTable;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
 public class Utils {
+
+	private static final String DELIMITER = ",";
 
 	/**
 	 * Determine if the given syntactic monoid is aperiodic or not.
@@ -20,7 +23,66 @@ public class Utils {
 		// that can be used to represent it
 		Map<State, String> shortestStateLabels = getShortestStateLabels(sm);
 
+		// associate each state label with a unique integer index
+		Map<String, Integer> stateLabelIndicies = new HashMap<>();
+		int index = 0;
+		for (String label : shortestStateLabels.values())
+			stateLabelIndicies.put(label, index++);
+
+		// get the matrix representation of the syntactic monoid
+		int[][] smMatrix = getSMMatrix(sm, stateLabelIndicies, 
+			shortestStateLabels);
+
 		return false;   // dummy return to shut up compiler
+	}
+
+	/**
+	 * Given a syntactic monoid and the mapping from state labels to
+	 * associated index values, as well as the mapping from states to
+	 * their shortest input string representations, return a 2d int
+	 * array that represents the syntactic monoid.
+	 * @param sm The syntactic monoid.
+	 * @param labelIndicies The mapping from state labels to their
+	                        associated index values.
+	 * @param stateLabels The mapping from states to their shortest
+	 *                    labels.
+	 * @return A 2d string array representation of the SM from which
+	 *         stateLabels was obtained.
+	 */
+	private static int[][] getSMMatrix(Fst sm, 
+		Map<String, Integer> labelIndicies,
+		Map<State, String> stateLabels) {
+		// the inverted input symbol table of the syntactic monoid
+		SymbolTable.InvertedSymbolTable rSTable = 
+			sm.getInputSymbols().invert();
+		// the reverse map from indicies to labels
+		Map<Integer, String> rLabelIndicies = new HashMap<>();
+		for(Map.Entry<String, Integer> entry : labelIndicies.entrySet())
+		    rLabelIndicies.put(entry.getValue(), entry.getKey());
+		// the reverse map from labels to states
+		Map<String, State> rStateLabels = new HashMap<>();
+		for(Map.Entry<State, String> entry : stateLabels.entrySet())
+		    rStateLabels.put(entry.getValue(), entry.getKey());
+		// the matrix representation of the syntactic monoid
+		int[][] ans = new int[sm.getStateCount()][sm.getStateCount()];
+
+		// populate the table
+		for (int i = 0; i < sm.getStateCount(); i++) {
+			for (int j = 0; j < sm.getStateCount(); j++) {
+				State columnState = rStateLabels.get(rLabelIndicies.get(j));
+				String rowLabel = rLabelIndicies.get(i);
+				String[] arcSymbolSequence = rowLabel.split(DELIMITER);
+				State entryState = columnState;
+				for (String s : arcSymbolSequence)
+					for (Arc arc : entryState.getArcs())
+						if (rSTable.keyForId(arc.getIlabel()).equals(s))
+							entryState = arc.getNextState();
+				String entryLabel = stateLabels.get(entryState);
+				int entry = labelIndicies.get(entryLabel);
+				ans[i][j] = entry;
+			}
+		}
+		return ans;
 	}
 
 	/**
@@ -33,7 +95,10 @@ public class Utils {
 	 * @param sm The syntactic monoid to operate on.
 	 * @return A map from state to (one of) its "shortest state labels".
 	 */
-	private static Map<State, String> getShortestStateLabels(Fst sm) {
+	public static Map<State, String> getShortestStateLabels(Fst sm) {
+		// the inverted input symbol table of the syntactic monoid
+		SymbolTable.InvertedSymbolTable rSTable = 
+			sm.getInputSymbols().invert();
 		// the map to return, with the empty string as the 
 		// initial label for start state
 		Map<State, String> ans = new HashMap<>();
@@ -58,8 +123,8 @@ public class Utils {
 				State potentialNewState = arc.getNextState();
 				if (stateStates.get(potentialNewState) == 
 					StateState.UNDISCOVERED) {   // discovered new state
-					String newLabel = ans.get(curState) + "," + 
-						arc.getIlabel();
+					String newLabel = ans.get(curState) + DELIMITER + 
+						rSTable.keyForId(arc.getIlabel());
 					ans.put(potentialNewState, newLabel);
 					stateStates.put(potentialNewState,
 						StateState.DISCOVERED);
