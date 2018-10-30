@@ -26,7 +26,7 @@ public class App {
       Convert.setRegexToSplitOn("\\s+");
       MutableFst originalFst = Convert.importFst(inputFile);
 
-      Utils.isAperiodic(originalFst);
+      System.out.println(Utils.isAperiodic(originalFst));
 
       // HashMap<Integer, MutableState> idToStateOrig = new HashMap<Integer, MutableState>();
 

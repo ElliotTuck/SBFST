@@ -33,7 +33,23 @@ public class Utils {
 		int[][] smMatrix = getSMMatrix(sm, stateLabelIndicies, 
 			shortestStateLabels);
 
-		return false;   // dummy return to shut up compiler
+		// check the matrix for aperiodicity
+		boolean nonPeriodDetected;
+		for (int i = 0; i < sm.getStateCount(); i++) {
+			int prev = i;
+			int count;
+			nonPeriodDetected = false;
+			for (count = 0; count < sm.getStateCount(); count++) {
+				int next = smMatrix[i][prev];
+				if (next == prev) {
+					nonPeriodDetected = true;
+					continue;
+				}
+				prev = next;
+			}
+			if (!nonPeriodDetected) return false;
+		}
+		return true;
 	}
 
 	/**
