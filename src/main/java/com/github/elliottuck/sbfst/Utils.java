@@ -43,7 +43,7 @@ public class Utils {
 				int next = smMatrix[i][prev];
 				if (next == prev) {
 					nonPeriodDetected = true;
-					continue;
+					break;
 				}
 				prev = next;
 			}
