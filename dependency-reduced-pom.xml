@@ -20,12 +20,23 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>sbfst.App</mainClass>
+                  <mainClass>com.github.elliottuck.sbfst.App</mainClass>
                 </transformer>
               </transformers>
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <mainClass>com.github.elliottuck.sbfst.App</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
       </plugin>
     </plugins>
   </build>
