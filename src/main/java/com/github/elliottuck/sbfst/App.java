@@ -139,6 +139,12 @@ public class App {
       String exportFileName = fileName.substring(0, index);
       Convert.export(synMonoid, exportFileName + "SyntacticMonoid");
 
-      System.out.println(Utils.isAperiodic(synMonoid));
+      int period = Utils.isAperiodic(synMonoid);
+      if (period == -1) {
+        System.out.println("The input language is aperiodic.");
+      } else {
+        System.out.println("The input language is periodic with period "
+          + period + ".");
+      }
     }
 }

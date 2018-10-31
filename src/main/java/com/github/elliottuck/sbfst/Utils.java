@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Utils {
 
@@ -15,10 +16,12 @@ public class Utils {
 
 	/**
 	 * Determine if the given syntactic monoid is aperiodic or not.
+	 * Indicate aperiodicity by returning -1, otherwise return the
+	 * period.
 	 * @param sm The syntactic monoid to check.
-	 * @return true if fst is aperiodic, false otherwise.
+	 * @return -1 if sm is aperiodic, otherwise the period.
 	 */
-	public static boolean isAperiodic(Fst sm) {
+	public static int isAperiodic(Fst sm) {
 		// get a map from state to a shortest sequence of input symbols
 		// that can be used to represent it
 		Map<State, String> shortestStateLabels = getShortestStateLabels(sm);
@@ -34,22 +37,27 @@ public class Utils {
 			shortestStateLabels);
 
 		// check the matrix for aperiodicity
-		boolean nonPeriodDetected;
+		Map<Integer, Integer> symbolIndicies = new HashMap<>();
+		List<Integer> periods = new ArrayList<>();
 		for (int i = 0; i < sm.getStateCount(); i++) {
+			symbolIndicies.clear();
 			int prev = i;
-			int count;
-			nonPeriodDetected = false;
-			for (count = 0; count < sm.getStateCount(); count++) {
+			for (index = 0; index < sm.getStateCount(); index++) {
+				symbolIndicies.put(prev, index);
 				int next = smMatrix[i][prev];
 				if (next == prev) {
-					nonPeriodDetected = true;
+					break;
+				}
+				if (symbolIndicies.containsKey(next)) {
+					// we have seen a symbol we already saw before
+					// and it wasn't the previous symbol
+					periods.add(index - symbolIndicies.get(next) + 1);
 					break;
 				}
 				prev = next;
 			}
-			if (!nonPeriodDetected) return false;
 		}
-		return true;
+		return periods.isEmpty() ? -1 : Collections.max(periods);
 	}
 
 	/**
