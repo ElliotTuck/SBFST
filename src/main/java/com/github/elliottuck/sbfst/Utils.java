@@ -274,4 +274,49 @@ public class Utils {
 	      return synMonoid;
 	}
 
+	/**
+	 * Get the pair graph of a given DFA and subsets of states. Note that
+	 * a DFA is represented here as an FST with identical input/output
+	 * labels for a given edge and equal edge weights throughout the graph.
+	 * Also note that this operation assumes that no state is labeled with
+	 * the symbol '*'.
+	 * TODO: come up with better system than assuming that '*' is an unused
+	 * state symbol (e.g. using concatenation of all existing state symbols
+	 * as the unused symbol)
+	 * @param fst The input FST.
+	 * @param q1 The first subset of states.
+	 * @param q2 The second subset of states.
+	 * @return The pair graph of dfa.
+	 */
+	public static Fst getPairGraph(Fst dfa, Set<State> q1, Set<State> q2) {
+		// TODO: check that the given fst is in fact a DFA
+		// TODO: check that q1/q2 are actually subsets of dfa's states
+		final String UNUSED_SYMBOL = "*";
+
+		MutableFst pairGraph = new MutableFst();
+		// create the states of the pair graph
+		SymbolTable stateSymbolTable = dfa.getStateSymbols();
+		pairGraph.useStateSymbols();
+		for (State p : q1) {
+			for (State q : q2) {
+				String pSymbol = stateSymbolTable.invert().keyForId(p.getId());
+				String qSymbol = stateSymbolTable.invert().keyForId(q.getId());
+				String newStateSymbol = pSymbol + DELIMITER + qSymbol;
+				pairGraph.addState(new MutableState(), newStateSymbol);
+			}
+		}
+		for (State p : q1) {
+			String pSymbol = stateSymbolTable.invert().keyForId(p.getId());
+			String newStateSymbol = pSymbol + UNUSED_SYMBOL;
+			pairGraph.addState(new MutableState(), newStateSymbol);
+		}
+		for (State q : q2) {
+			String qSymbol = stateSymbolTable.invert().keyForId(q.getId());
+			String newStateSymbol = UNUSED_SYMBOL + qSymbol;
+			pairGraph.addState(new MutableState(), newStateSymbol);
+		}
+
+		return pairGraph;
+	}
+
 }
