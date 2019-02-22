@@ -1,11 +1,13 @@
-package com.github.elliottuck.sbfst;
+package sbfst;
 
 import com.github.steveash.jopenfst.*;
 import java.util.*;
 
 public class Utils {
 
-	private static final String DELIMITER = ",";
+	public static final String DELIMITER = ",";
+
+	public static final String UNUSED_SYMBOL = "*";
 
 	/**
 	 * Determine if the given syntactic monoid is aperiodic or not.
@@ -291,9 +293,9 @@ public class Utils {
 	public static Fst getPairGraph(Fst dfa, Set<State> q1, Set<State> q2) {
 		// TODO: check that the given fst is in fact a DFA
 		// TODO: check that q1/q2 are actually subsets of dfa's states
-		final String UNUSED_SYMBOL = "*";
 
 		MutableFst pairGraph = new MutableFst();
+
 		// create the states of the pair graph
 		SymbolTable stateSymbolTable = dfa.getStateSymbols();
 		pairGraph.useStateSymbols();
@@ -316,7 +318,40 @@ public class Utils {
 			pairGraph.addState(new MutableState(), newStateSymbol);
 		}
 
+		// create the edges of the pair graph
+
+
 		return pairGraph;
 	}
+
+	/**
+	 * The delta_i transition function as described in Kim, McNaughton, McCloskey
+	 * 1991 (A polynomial time algorithm for the local...).
+	 * @param dfa The DFA to use as a basis for looking up transitions.
+	 * @param q_i A subset of states from dfa.
+	 * @param p The state symbol for a state from q_i.
+	 * @param a The transition symbol from the alphabet of dfa.
+	 * @return The state symbol for state q resulting from the transition 
+	 * delta(p, a) if q is an element of q_i, otherwise the unused symbol '*'.
+	 */
+	public static String deltaI(Fst dfa, Set<State> q_i, String p, String a) {
+		SymbolTable.InvertedSymbolTable inverseStateSymbols = dfa.getStateSymbols().invert();
+		SymbolTable.InvertedSymbolTable inverseInputSymbols = dfa.getInputSymbols().invert();
+		// get the state with label p
+		State stateP = dfa.getState(p);
+		// look through stateP's arcs to find one with label a
+		for (Arc arc : stateP.getArcs()) {
+			if (inverseInputSymbols.keyForId(arc.getIlabel()).equals(a)) {
+				State stateQ = arc.getNextState();
+				if (q_i.contains(stateQ)) {
+					return inverseStateSymbols.keyForId(stateQ.getId());
+				} else {
+					return UNUSED_SYMBOL;
+				}
+			}
+		}
+		return UNUSED_SYMBOL;
+	}
+
 
 }

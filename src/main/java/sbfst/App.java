@@ -1,10 +1,7 @@
-package com.github.elliottuck.sbfst;
+package sbfst;
 
 import com.github.steveash.jopenfst.*;
 import com.github.steveash.jopenfst.io.*;
-import java.io.File;
-import java.util.*;
-
 
 /**
  * Main class.
@@ -20,17 +17,13 @@ public class App {
   */
     public static void main(String[] args) {
       String fileName = args[0];
-      File inputFile = new File(fileName);
       Convert.setRegexToSplitOn("\\s+");
-      MutableFst originalFst = Convert.importFst(inputFile);
+      MutableFst originalFst = Convert.importFst(fileName);
 
       Fst synMonoid = Utils.getSM(originalFst);
 
-      System.out.println(synMonoid);
       Convert.setUseSymbolIdsInText(true);
-      int index = fileName.indexOf(".fst");
-      String exportFileName = fileName.substring(0, index);
-      Convert.export(synMonoid, exportFileName + "SyntacticMonoid");
+      Convert.export(synMonoid, fileName + "_syntactic_monoid");
 
       int period = Utils.isAperiodic(synMonoid);
       if (period == -1) {

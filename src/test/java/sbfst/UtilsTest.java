@@ -1,4 +1,4 @@
-package com.github.elliottuck.sbfst;
+package sbfst;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -10,7 +10,7 @@ import com.github.steveash.jopenfst.io.*;
 import java.util.*;
 
 /**
- * Unit tests for Utils.java.
+ * Unit tests for sbfst.Utils.java.
  */
 public class UtilsTest extends TestCase {
     /**
@@ -56,5 +56,36 @@ public class UtilsTest extends TestCase {
         Fst pairGraph = Utils.getPairGraph(dfa, q1, q2);
 
         assertTrue( dfa.getStateCount() == 5 );
+    }
+
+    /**
+     * Test that the delta_i transition function works.
+     */
+    public void testDeltaI() {
+        // import test dfa
+        Convert.setRegexToSplitOn("\\s+");
+        Fst dfa = Convert.importFst("test_pairgraph_1");
+
+        // get subsets of states from test dfa
+        Set<State> q1 = new HashSet<>();
+        q1.add(dfa.getState(0));
+        q1.add(dfa.getState(1));
+        q1.add(dfa.getState(2));
+        q1.add(dfa.getState(3));
+        q1.add(dfa.getState(4));
+        Set<State> q2 = new HashSet<>();
+        q2.add(dfa.getState(2));
+        q2.add(dfa.getState(3));
+        q2.add(dfa.getState(4));
+
+        // test transition function delta_1
+        assertTrue(Utils.deltaI(dfa, q1, "1", "a").equals("2"));
+        assertTrue(Utils.deltaI(dfa, q1, "1", "b").equals(Utils.UNUSED_SYMBOL));
+        assertTrue(Utils.deltaI(dfa, q1, "1", "c").equals(Utils.UNUSED_SYMBOL));
+
+        // test transition function delta_2
+        assertTrue(Utils.deltaI(dfa, q2, "3", "a").equals("4"));
+        assertTrue(Utils.deltaI(dfa, q1, "3", "b").equals(Utils.UNUSED_SYMBOL));
+        assertTrue(Utils.deltaI(dfa, q1, "3", "c").equals(Utils.UNUSED_SYMBOL));
     }
 }
