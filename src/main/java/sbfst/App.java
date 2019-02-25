@@ -2,6 +2,7 @@ package sbfst;
 
 import com.github.steveash.jopenfst.*;
 import com.github.steveash.jopenfst.io.*;
+import java.util.ArrayList;
 
 /**
  * Main class.
@@ -32,5 +33,15 @@ public class App {
         System.out.println("The input language is periodic with period "
           + period + ".");
       }
+
+      // ArrayList<ArrayList<State>> SCCs = Utils.getSCCs(originalFst);
+      // for (ArrayList<State> scc: SCCs){
+      //   System.out.print("SCC: ");
+      //   for (State state : scc){
+      //     System.out.print(state.getId() + " ");
+      //   }
+      //   System.out.println();
+      // }
+
     }
 }
