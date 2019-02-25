@@ -100,7 +100,7 @@ public class App {
 
             MutableState nState = synMonoid.getOrNewState(nStateName);
 
-            synMonoid.addArc(stateToProcess, i+1, i+1, nState, 0);
+            synMonoid.addArc(stateToProcess, ""+(i+1), ""+(i+1), nState, 0);
 
             boolean foundProcessed = false;
             boolean foundToProcess = false;
