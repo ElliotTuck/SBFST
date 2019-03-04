@@ -479,6 +479,112 @@ private static Stack orderProcessed(State startState, boolean visited[], Stack s
 		return stack;
 }
 
+/**
+* find the ancestors of each SCC in the given array of SCCs
+* @param SCCs SCCs to look for ancestors of
+* @param dfa dfa the states belong to
+* @return An arrayList of arrayLists of the ancestors of a given SCC
+* note: the i-th list corresponds to the ancestors of the i-th SCC
+* listed in the SCCs array (the actual values in the ancestors list
+* correspond to the index of the ancestor in the SCCs array)
+*/
+	public static ArrayList<ArrayList<Integer>> getAncestors(ArrayList<ArrayList<State>> SCCs, Fst dfa){
+			ArrayList<ArrayList<Integer>> solution = new ArrayList<>();
+
+			for (int i = 0; i < SCCs.size(); i++){
+				ArrayList<Integer> ancestors = new ArrayList<>();
+				for (int j = 0; j < SCCs.size(); j++){
+					if (i == j){
+						continue;
+					}
+					if (isPath(SCCs.get(j).get(0), SCCs.get(i).get(0), dfa)){
+						ancestors.add(j);
+					}
+				}
+				solution.add(ancestors);
+			}
+
+			return solution;
+	}
+
+/**
+* Do a bidirectional BFS from startState and endState looking for
+* a collision in the search (return true if found)
+* @param startState the state to start the search from
+* @param endState the state to look for a path to
+* @return true if there exists a path from startState to endState,
+* false otherwise
+*/
+public static boolean isPath(State startState, State endState, Fst dfa){
+		Fst transposed = Reverse.reverse(dfa);
+
+		int endId = endState.getId();
+		State endStateTransposed = transposed.getState(endId);
+
+		boolean[] sIsVisited = new boolean[dfa.getStateCount()];
+		boolean[] eIsVisited = new boolean[dfa.getStateCount()];
+
+		ArrayList<State> sQueue = new ArrayList<>();
+		ArrayList<State> eQueue = new ArrayList<>();
+
+		int collision = -1;
+
+		sQueue.add(startState);
+		eQueue.add(endStateTransposed);
+
+		sIsVisited[startState.getId()] = true;
+		eIsVisited[endStateTransposed.getId()] = true;
+
+		while((sQueue.size() != 0) && (eQueue.size() != 0)){
+			BFS(sQueue, sIsVisited, dfa);
+			BFS(eQueue, eIsVisited, transposed);
+
+			collision = isCollision(sIsVisited, eIsVisited);
+
+			if (collision != -1){
+				return true;
+			}
+
+		}
+		return false;
+}
+
+/**
+* Do one step of a BFS (add the not yet visited neighbors of the
+* first state on our queue to our queue and mark them as visited)
+* @param queue the current BFS queue
+* @param isVisited boolean array representing the states that have been
+* visited so far
+* @param dfa dfa we are traversing
+* @return void
+*/
+private static void BFS(ArrayList<State> queue, boolean[] isVisited, Fst dfa){
+		State state = queue.get(0);
+		queue.remove(state);
+
+		for (Arc arc : state.getArcs()) {
+			State adjState = arc.getNextState();
+			if (!isVisited[adjState.getId()]){
+				queue.add(adjState);
+				isVisited[adjState.getId()] = true;
+			}
+		}
+}
+
+/**
+* Check if there is an index from array1 == array2 == 1
+* @param array1 first array to check
+* @param array2 array to check against
+* @return returns index of collision if occurred, -1 otherwise
+*/
+private static int isCollision(boolean[] array1, boolean[] array2){
+	for (int i = 0; i < array1.length; i++){
+		if (array1[i] == true && array2[i] == true){
+			return i;
+		}
+	}
+	return -1;
+}
 
 
 }
