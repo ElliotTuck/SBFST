@@ -1,6 +1,7 @@
 package sbfst;
 
 import com.github.steveash.jopenfst.*;
+import com.github.steveash.jopenfst.operations.*;
 import java.util.*;
 
 public class Utils {
@@ -28,7 +29,7 @@ public class Utils {
 			stateLabelIndicies.put(label, index++);
 
 		// get the matrix representation of the syntactic monoid
-		int[][] smMatrix = getSMMatrix(sm, stateLabelIndicies, 
+		int[][] smMatrix = getSMMatrix(sm, stateLabelIndicies,
 			shortestStateLabels);
 
 		// check the matrix for aperiodicity
@@ -68,11 +69,11 @@ public class Utils {
 	 * @return A 2d string array representation of the SM from which
 	 *         stateLabels was obtained.
 	 */
-	private static int[][] getSMMatrix(Fst sm, 
+	private static int[][] getSMMatrix(Fst sm,
 		Map<String, Integer> labelIndicies,
 		Map<State, String> stateLabels) {
 		// the inverted input symbol table of the syntactic monoid
-		SymbolTable.InvertedSymbolTable rSTable = 
+		SymbolTable.InvertedSymbolTable rSTable =
 			sm.getInputSymbols().invert();
 		// the reverse map from indicies to labels
 		Map<Integer, String> rLabelIndicies = new HashMap<>();
@@ -105,20 +106,20 @@ public class Utils {
 	}
 
 	/**
-	 * Given a syntactic monoid, find the shortest path from the start 
-	 * state to each other state (where distance is computed assuming 
-	 * each edge has the same weight). Return a map from state to a 
-	 * shortest label that could be used to represent it (where labels 
-	 * are constructed as comma-separated lists of the input symbols 
+	 * Given a syntactic monoid, find the shortest path from the start
+	 * state to each other state (where distance is computed assuming
+	 * each edge has the same weight). Return a map from state to a
+	 * shortest label that could be used to represent it (where labels
+	 * are constructed as comma-separated lists of the input symbols
 	 * along the shortest path from the root to the state).
 	 * @param sm The syntactic monoid to operate on.
 	 * @return A map from state to (one of) its "shortest state labels".
 	 */
 	public static Map<State, String> getShortestStateLabels(Fst sm) {
 		// the inverted input symbol table of the syntactic monoid
-		SymbolTable.InvertedSymbolTable rSTable = 
+		SymbolTable.InvertedSymbolTable rSTable =
 			sm.getInputSymbols().invert();
-		// the map to return, with the empty string as the 
+		// the map to return, with the empty string as the
 		// initial label for start state
 		Map<State, String> ans = new HashMap<>();
 		ans.put(sm.getStartState(), Fst.EPS);
@@ -140,9 +141,9 @@ public class Utils {
 			State curState = queue.remove(0);
 			for (Arc arc : curState.getArcs()) {
 				State potentialNewState = arc.getNextState();
-				if (stateStates.get(potentialNewState) == 
+				if (stateStates.get(potentialNewState) ==
 					StateState.UNDISCOVERED) {   // discovered new state
-					String newLabel = ans.get(curState) + DELIMITER + 
+					String newLabel = ans.get(curState) + DELIMITER +
 						rSTable.keyForId(arc.getIlabel());
 					ans.put(potentialNewState, newLabel);
 					stateStates.put(potentialNewState,
@@ -331,7 +332,7 @@ public class Utils {
 	 * @param q_i A subset of states from dfa.
 	 * @param p The state symbol for a state from q_i.
 	 * @param a The transition symbol from the alphabet of dfa.
-	 * @return The state symbol for state q resulting from the transition 
+	 * @return The state symbol for state q resulting from the transition
 	 * delta(p, a) if q is an element of q_i, otherwise the unused symbol '*'.
 	 */
 	public static String deltaI(Fst dfa, Set<State> q_i, String p, String a) {
@@ -352,6 +353,238 @@ public class Utils {
 		}
 		return UNUSED_SYMBOL;
 	}
+
+
+	/**
+	* Find all maximal strongly connected components of the given dfa
+	* using Kosaraju's algorithm
+	* @param dfa The DFA to find the SCCs for
+	* @return An arrayList containing lists of states, where each
+	* list contains all of the states from a single SCC
+	*/
+public static ArrayList<ArrayList<State>> getSCCs(Fst dfa){
+		// stack to hold order that states were finished being
+		// processed in DFS
+		Stack stack = new Stack();
+
+		// arraylist of SCCs that we will be building up to return
+		ArrayList<ArrayList<State>> SCCs = new ArrayList<>();
+
+		// initialize visited array
+		boolean[] visited = new boolean[dfa.getStateCount()];
+		for (int i = 0; i < dfa.getStateCount(); i++){
+			visited[i] = false;
+		}
+
+		// while there are states that still haven't been seen by DFS,
+		// start a DFS from unvisited state
+		for (int i = 0; i < dfa.getStateCount(); i++){
+			if (visited[i] == false){
+				stack = orderProcessed(dfa.getState(i), visited, stack);
+			}
+
+		}
+
+		// transpose dfa
+		Fst transposed = Reverse.reverse(dfa);
+
+		// reset visited array to do dfs from each state of transposed dfa
+		for (int i = 0; i < dfa.getStateCount(); i++){
+			visited[i] = false;
+		}
+
+		// Now process all states in order defined by Stack
+		while (stack.empty() == false){
+			// Pop a vertex from stack
+			State state = (State)stack.pop();
+			State tState = null;
+			for (int i = 0; i < transposed.getStateCount(); i++){
+				tState = transposed.getState(i);
+				if (tState.getId() == state.getId()){
+					break;
+				}
+			}
+			ArrayList<State> result = new ArrayList<>();
+
+			// Print Strongly connected component of the popped vertex
+			if (visited[state.getId()] == false){
+				SCCs.add(DFS(tState, visited, result));
+			}
+
+			// states returned in SCC were from the transposed dfa
+			// this will exchanged the states from the transposed dfa
+			// for their original state from the original dfa
+			for (ArrayList<State> scc : SCCs){
+				for (int i = 0; i < scc.size(); i++){
+					scc.set(i, dfa.getState(scc.get(i).getId()));
+				}
+			}
+		}
+
+		return SCCs;
+	}
+
+	/**
+	* Do a DFS of the given dfa starting at state "start"
+	* @param start The state to start the DFS from
+	* @param visited array to keep track of the states we've seen so far
+	* @param result arraylist to add found states to
+	* @return An arrayList containing the states reached from the DFA,
+	* in order of discovery
+	*/
+	public static ArrayList<State> DFS(State startState, boolean visited[], ArrayList<State> result){
+			// Mark the current node as visited and print it
+			visited[startState.getId()] = true;
+			result.add(startState);
+
+			// Recur for all the vertices adjacent to this vertex
+			for (Arc arc : startState.getArcs()) {
+				State adjState = arc.getNextState();
+				System.out.println("State " + startState.getId() + " is connected to " + adjState.getId());
+				if (!visited[adjState.getId()]){
+					DFS(adjState, visited, result);
+				}
+			}
+			return result;
+	}
+
+
+	/**
+	* Do a DFS of the given dfa starting at state "start",
+	* but we are adding states to our result stack only
+	* once all states reachable from that state are processed
+	* @param start The state to start the DFS from
+	* @param visited array to keep track of the states we've seen so far
+	* @param stack stack of states in order of when processing of the reachable
+	* states from that state is finished
+	* @return An arrayList containing the states reached from the DFA,
+	* in order of discovery
+	*/
+private static Stack orderProcessed(State startState, boolean visited[], Stack stack){
+
+		// Mark the current state as visited
+		visited[startState.getId()] = true;
+
+		// Recur for all the states adjacent to this vertex
+		for (Arc arc : startState.getArcs()) {
+			State adjState = arc.getNextState();
+			if (!visited[adjState.getId()]){
+				stack = orderProcessed(adjState, visited, stack);
+			}
+		}
+
+		// All vertices reachable from v are processed by now,
+		// push state to Stack
+		stack.push(startState);
+		return stack;
+}
+
+/**
+* find the ancestors of each SCC in the given array of SCCs
+* @param SCCs SCCs to look for ancestors of
+* @param dfa dfa the states belong to
+* @return An arrayList of arrayLists of the ancestors of a given SCC
+* note: the i-th list corresponds to the ancestors of the i-th SCC
+* listed in the SCCs array (the actual values in the ancestors list
+* correspond to the index of the ancestor in the SCCs array)
+*/
+	public static ArrayList<ArrayList<Integer>> getAncestors(ArrayList<ArrayList<State>> SCCs, Fst dfa){
+			ArrayList<ArrayList<Integer>> solution = new ArrayList<>();
+
+			for (int i = 0; i < SCCs.size(); i++){
+				ArrayList<Integer> ancestors = new ArrayList<>();
+				for (int j = 0; j < SCCs.size(); j++){
+					if (i == j){
+						continue;
+					}
+					if (isPath(SCCs.get(j).get(0), SCCs.get(i).get(0), dfa)){
+						ancestors.add(j);
+					}
+				}
+				solution.add(ancestors);
+			}
+
+			return solution;
+	}
+
+/**
+* Do a bidirectional BFS from startState and endState looking for
+* a collision in the search (return true if found)
+* @param startState the state to start the search from
+* @param endState the state to look for a path to
+* @return true if there exists a path from startState to endState,
+* false otherwise
+*/
+public static boolean isPath(State startState, State endState, Fst dfa){
+		Fst transposed = Reverse.reverse(dfa);
+
+		int endId = endState.getId();
+		State endStateTransposed = transposed.getState(endId);
+
+		boolean[] sIsVisited = new boolean[dfa.getStateCount()];
+		boolean[] eIsVisited = new boolean[dfa.getStateCount()];
+
+		ArrayList<State> sQueue = new ArrayList<>();
+		ArrayList<State> eQueue = new ArrayList<>();
+
+		int collision = -1;
+
+		sQueue.add(startState);
+		eQueue.add(endStateTransposed);
+
+		sIsVisited[startState.getId()] = true;
+		eIsVisited[endStateTransposed.getId()] = true;
+
+		while((sQueue.size() != 0) && (eQueue.size() != 0)){
+			BFS(sQueue, sIsVisited, dfa);
+			BFS(eQueue, eIsVisited, transposed);
+
+			collision = isCollision(sIsVisited, eIsVisited);
+
+			if (collision != -1){
+				return true;
+			}
+
+		}
+		return false;
+}
+
+/**
+* Do one step of a BFS (add the not yet visited neighbors of the
+* first state on our queue to our queue and mark them as visited)
+* @param queue the current BFS queue
+* @param isVisited boolean array representing the states that have been
+* visited so far
+* @param dfa dfa we are traversing
+* @return void
+*/
+private static void BFS(ArrayList<State> queue, boolean[] isVisited, Fst dfa){
+		State state = queue.get(0);
+		queue.remove(state);
+
+		for (Arc arc : state.getArcs()) {
+			State adjState = arc.getNextState();
+			if (!isVisited[adjState.getId()]){
+				queue.add(adjState);
+				isVisited[adjState.getId()] = true;
+			}
+		}
+}
+
+/**
+* Check if there is an index from array1 == array2 == 1
+* @param array1 first array to check
+* @param array2 array to check against
+* @return returns index of collision if occurred, -1 otherwise
+*/
+private static int isCollision(boolean[] array1, boolean[] array2){
+	for (int i = 0; i < array1.length; i++){
+		if (array1[i] == true && array2[i] == true){
+			return i;
+		}
+	}
+	return -1;
+}
 
 
 }
