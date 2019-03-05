@@ -286,7 +286,7 @@ public class Utils {
 	 * TODO: come up with better system than assuming that '*' is an unused
 	 * state symbol (e.g. using concatenation of all existing state symbols
 	 * as the unused symbol)
-	 * @param fst The input FST.
+	 * @param dfa The input FST.
 	 * @param q1 The first subset of states.
 	 * @param q2 The second subset of states.
 	 * @return The pair graph of dfa.
@@ -310,17 +310,36 @@ public class Utils {
 		}
 		for (State p : q1) {
 			String pSymbol = stateSymbolTable.invert().keyForId(p.getId());
-			String newStateSymbol = pSymbol + UNUSED_SYMBOL;
+			String newStateSymbol = pSymbol + DELIMITER + UNUSED_SYMBOL;
 			pairGraph.addState(new MutableState(), newStateSymbol);
 		}
 		for (State q : q2) {
 			String qSymbol = stateSymbolTable.invert().keyForId(q.getId());
-			String newStateSymbol = UNUSED_SYMBOL + qSymbol;
+			String newStateSymbol = UNUSED_SYMBOL + DELIMITER + qSymbol;
 			pairGraph.addState(new MutableState(), newStateSymbol);
 		}
 
 		// create the edges of the pair graph
+		for (String stateName : pairGraph.getStateSymbols().symbols()) {
+			String[] substateNames = stateName.split(DELIMITER);
+			String pName = substateNames[0];
+			String qName = substateNames[1];
+			if (pName.equals(UNUSED_SYMBOL) || qName.equals(UNUSED_SYMBOL)) {
+				continue;
+			}
+			State p = dfa.getState(pName);
+			State q = dfa.getState(qName);
 
+			if (!p.equals(q) && q1.contains(p) && q2.contains(q)) {
+				for (String a : dfa.getInputSymbols().symbols()) {
+					String r = deltaI(dfa, q1, pName, a);
+					String s = deltaI(dfa, q2, qName, a);
+					if (r != UNUSED_SYMBOL || s != UNUSED_SYMBOL) { // valid transition in pair graph
+						pairGraph.addArc(stateName, a, a, r + DELIMITER + s, 0);
+					}
+				}
+			}
+		}
 
 		return pairGraph;
 	}
@@ -426,7 +445,7 @@ public static ArrayList<ArrayList<State>> getSCCs(Fst dfa){
 
 	/**
 	* Do a DFS of the given dfa starting at state "start"
-	* @param start The state to start the DFS from
+	* @param startState The state to start the DFS from
 	* @param visited array to keep track of the states we've seen so far
 	* @param result arraylist to add found states to
 	* @return An arrayList containing the states reached from the DFA,
@@ -453,7 +472,7 @@ public static ArrayList<ArrayList<State>> getSCCs(Fst dfa){
 	* Do a DFS of the given dfa starting at state "start",
 	* but we are adding states to our result stack only
 	* once all states reachable from that state are processed
-	* @param start The state to start the DFS from
+	* @param startState The state to start the DFS from
 	* @param visited array to keep track of the states we've seen so far
 	* @param stack stack of states in order of when processing of the reachable
 	* states from that state is finished

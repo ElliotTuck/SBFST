@@ -88,4 +88,29 @@ public class UtilsTest extends TestCase {
         assertTrue(Utils.deltaI(dfa, q1, "3", "b").equals(Utils.UNUSED_SYMBOL));
         assertTrue(Utils.deltaI(dfa, q1, "3", "c").equals(Utils.UNUSED_SYMBOL));
     }
+
+    /**
+     * Test pair graph creation.
+     */
+    public void testPairGraph() {
+        // import test dfa
+        Convert.setRegexToSplitOn("\\s+");
+        Fst dfa = Convert.importFst("test_pairgraph_1");
+
+        // get subsets of states from test dfa
+        Set<State> q1 = new HashSet<>();
+        q1.add(dfa.getState(0));
+        q1.add(dfa.getState(1));
+        q1.add(dfa.getState(2));
+        q1.add(dfa.getState(3));
+        q1.add(dfa.getState(4));
+        Set<State> q2 = new HashSet<>();
+        q2.add(dfa.getState(2));
+        q2.add(dfa.getState(3));
+        q2.add(dfa.getState(4));
+
+        // get the pair graph of the test dfa using the state subsets above
+        Fst pairGraph = Utils.getPairGraph(dfa, q1, q2);
+        System.out.println(pairGraph);
+    }
 }
