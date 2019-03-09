@@ -113,4 +113,36 @@ public class UtilsTest extends TestCase {
         Fst pairGraph = Utils.getPairGraph(dfa, q1, q2);
         System.out.println(pairGraph);
     }
+
+    /**
+     * Test checking for cycles in graphs.
+     */
+    public void testAcyclicChecking() {
+        // import test dfa
+        Convert.setRegexToSplitOn("\\s+");
+        Fst dfa = Convert.importFst("test_acyclic_1");
+
+        // this graph is cyclic, so isAcyclic should return false
+        assertTrue(!Utils.isAcyclic(dfa));
+
+        // the pair graph is cyclic too
+        Set<State> q1 = new HashSet<>();
+        q1.add(dfa.getState(0));
+        q1.add(dfa.getState(1));
+        q1.add(dfa.getState(2));
+        q1.add(dfa.getState(3));
+        q1.add(dfa.getState(4));
+        Set<State> q2 = new HashSet<>();
+        q2.add(dfa.getState(2));
+        q2.add(dfa.getState(3));
+        q2.add(dfa.getState(4));
+        assertTrue(!Utils.isAcyclic(Utils.getPairGraph(dfa, q1, q2)));
+
+        // import another test dfa
+        Convert.setRegexToSplitOn("\\s+");
+        dfa = Convert.importFst("test_acyclic_2");
+
+        // this graph is acyclic, so isAcyclic should return true
+        assertTrue(Utils.isAcyclic(dfa));
+    }
 }

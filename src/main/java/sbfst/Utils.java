@@ -57,6 +57,17 @@ public class Utils {
 	}
 
 	/**
+	 * Determine if the given fst is locally testable or not. For now it is assumed that the input automaton is a dfa,
+	 * although future versions could be altered to allow for a broader set of inputs.
+	 * @param dfa The input dfa to test, assumed to be minimized.
+	 * @return true if dfa is locally testable, false otherwise.
+	 */
+	public boolean isLocallyTestable(Fst dfa) {
+		// check s-locality of dfa's SCCs
+		return true;   // dummy return
+	}
+
+	/**
 	 * Given a syntactic monoid and the mapping from state labels to
 	 * associated index values, as well as the mapping from states to
 	 * their shortest input string representations, return a 2d int
@@ -278,6 +289,23 @@ public class Utils {
 	}
 
 	/**
+	 * Determine if the given components of a state transition graph are pairwise s-local (or just s-local if both
+	 * components are the same component).
+	 * @param dfa The dfa to base the s-locality off of.
+	 * @param m1 The first component.
+	 * @param m2 The second component.
+	 * @return true if m1 and m2 are pairwise s-local, false otherwise.
+	 */
+	public boolean isPairwiseSLocal(Fst dfa, Set<State> m1, Set<State> m2) {
+		// construct the pair graph on m1 and m2
+		Fst pairGraph = getPairGraph(dfa, m1, m2);
+
+		// check if the pair graph is acyclic
+
+		return false;   // dummy return
+	}
+
+	/**
 	 * Get the pair graph of a given DFA and subsets of states. Note that
 	 * a DFA is represented here as an FST with identical input/output
 	 * labels for a given edge and equal edge weights throughout the graph.
@@ -371,6 +399,65 @@ public class Utils {
 			}
 		}
 		return UNUSED_SYMBOL;
+	}
+
+	// helper data structures for isAcyclic()
+	private static StateState[] stateStates;
+	private static int[] stateEnterTimes;
+	private static int[] stateExitTimes;
+	/**
+	 * Determine if the given dfa is acyclic.
+	 * @param dfa The graph to check.
+	 * @return true if dfa is acyclic, false otherwise.
+	 */
+	public static boolean isAcyclic(Fst dfa) {
+		// perform DFS and check for back edges
+		stateStates = new StateState[dfa.getStateCount()];
+		for (int i = 0; i < dfa.getStateCount(); i++) {
+			stateStates[i] = StateState.UNDISCOVERED;
+		}
+		for (int i = 0; i < dfa.getStateCount(); i++) {
+			if (stateStates[i] == StateState.UNDISCOVERED) {
+				if (!isAcyclicHelper(dfa, dfa.getState(i))) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private static boolean isAcyclicHelper(Fst dfa, State s) {
+		stateStates[s.getId()] = StateState.DISCOVERED;
+		for (Arc a : s.getArcs()) {
+			System.out.println("next state: " + a.getNextState().getId());
+			State t = a.getNextState();
+			if (stateStates[t.getId()] == StateState.DISCOVERED) {   // found a back edge, thus there is a cycle
+				return false;
+			} else if (stateStates[t.getId()] == StateState.UNDISCOVERED) {
+				if (!isAcyclicHelper(dfa, t)) {
+					return false;
+				}
+			}
+		}
+		stateStates[s.getId()] = StateState.PROCESSED;
+		return true;
+	}
+
+	private static void printStateStates() {
+		System.out.print("[ ");
+		for (StateState s : stateStates) {
+			switch (s) {
+				case PROCESSED:
+					System.out.print("P, ");
+					break;
+				case DISCOVERED:
+					System.out.print("D, ");
+					break;
+				case UNDISCOVERED:
+					System.out.print("U, ");
+			}
+		}
+		System.out.println(" ]");
 	}
 
 
