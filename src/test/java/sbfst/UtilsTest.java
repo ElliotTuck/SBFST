@@ -24,6 +24,10 @@ public class UtilsTest {
     Set<State> fig1M2Q1;
     Set<State> fig1M2Q2;
 
+    Fst fig1M1;
+    Set<State> fig1M1Q1;
+    Set<State> fig1M1Q2;
+
     /**
      * Run before each test case to initialize the testing environment.
      */
@@ -49,6 +53,15 @@ public class UtilsTest {
         fig1M2Q2 = new HashSet<>();
         fig1M2Q2.add(fig1M2.getState(0));
         fig1M2Q2.add(fig1M2.getState(1));
+        fig1M1 = Convert.importFst("fig1M1");
+        fig1M1Q1 = new HashSet<>();
+        fig1M1Q1.add(fig1M1.getState(0));
+        fig1M1Q1.add(fig1M1.getState(1));
+        fig1M1Q1.add(fig1M1.getState(2));
+        fig1M1Q2 = new HashSet<>();
+        fig1M1Q1.add(fig1M1.getState(0));
+        fig1M1Q1.add(fig1M1.getState(1));
+        fig1M1Q1.add(fig1M1.getState(2));
     }
 
     /**
@@ -114,7 +127,10 @@ public class UtilsTest {
         // Fig. 3 in Kim, McNaughton, McCloskey 1991 (given components are not pairwise s-local)
         assertTrue(!Utils.isPairwiseSLocal(fig3A, fig3AQ1, fig3AQ2));
 
-        // Fig. 1 in Kim, McNaughton, McCloskey 1991 (given components are not pairwise s-local)
+        // Fig. 1, M2 in Kim, McNaughton, McCloskey 1991 (given components are not pairwise s-local)
         assertTrue(!Utils.isPairwiseSLocal(fig1M2, fig1M2Q1, fig1M2Q2));
+
+        // Fig. 1, M1 in Kim, McNaughton, McCloskey 1991 (give components are pairwise s-local)
+        assertTrue(Utils.isPairwiseSLocal(fig1M1, fig1M1Q1, fig1M1Q2));
     }
 }
