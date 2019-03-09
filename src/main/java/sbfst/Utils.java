@@ -296,13 +296,12 @@ public class Utils {
 	 * @param m2 The second component.
 	 * @return true if m1 and m2 are pairwise s-local, false otherwise.
 	 */
-	public boolean isPairwiseSLocal(Fst dfa, Set<State> m1, Set<State> m2) {
+	public static boolean isPairwiseSLocal(Fst dfa, Set<State> m1, Set<State> m2) {
 		// construct the pair graph on m1 and m2
 		Fst pairGraph = getPairGraph(dfa, m1, m2);
 
 		// check if the pair graph is acyclic
-
-		return false;   // dummy return
+		return isAcyclic(pairGraph);
 	}
 
 	/**

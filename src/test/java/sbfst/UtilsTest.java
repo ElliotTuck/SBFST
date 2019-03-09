@@ -1,148 +1,120 @@
 package sbfst;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 import com.github.steveash.jopenfst.*;
 import com.github.steveash.jopenfst.io.*;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.*;
+
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * Unit tests for sbfst.Utils.java.
  */
-public class UtilsTest extends TestCase {
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
-    public UtilsTest( String testName )
-    {
-        super( testName );
-    }
+public class UtilsTest {
+
+    Fst fig3A;
+    Set<State> fig3AQ1;
+    Set<State> fig3AQ2;
+
+    Fst acyclic1;
+
+    Fst fig1M2;
+    Set<State> fig1M2Q1;
+    Set<State> fig1M2Q2;
 
     /**
-     * @return the suite of tests being tested
+     * Run before each test case to initialize the testing environment.
      */
-    public static Test suite()
-    {
-        return new TestSuite( UtilsTest.class );
+    @Before
+    public void initialize() {
+        Convert.setRegexToSplitOn("\\s+");
+        fig3A = Convert.importFst("test_pairgraph_1");
+        fig3AQ1 = new HashSet<>();
+        fig3AQ1.add(fig3A.getState(0));
+        fig3AQ1.add(fig3A.getState(1));
+        fig3AQ1.add(fig3A.getState(2));
+        fig3AQ1.add(fig3A.getState(3));
+        fig3AQ1.add(fig3A.getState(4));
+        fig3AQ2 = new HashSet<>();
+        fig3AQ2.add(fig3A.getState(2));
+        fig3AQ2.add(fig3A.getState(3));
+        fig3AQ2.add(fig3A.getState(4));
+        acyclic1 = Convert.importFst("test_acyclic_1");
+        fig1M2 = Convert.importFst("fig1M2");
+        fig1M2Q1 = new HashSet<>();
+        fig1M2Q1.add(fig1M2.getState(0));
+        fig1M2Q1.add(fig1M2.getState(1));
+        fig1M2Q2 = new HashSet<>();
+        fig1M2Q2.add(fig1M2.getState(0));
+        fig1M2Q2.add(fig1M2.getState(1));
     }
 
     /**
      * Test that the pair graph has the correct number of states.
      */
+    @Test
     public void testPairGraphStates()
     {
-        // import test dfa
-        Convert.setRegexToSplitOn("\\s+");
-        Fst dfa = Convert.importFst("test_pairgraph_1");
-
-        // get subsets of states from test dfa
-        Set<State> q1 = new HashSet<>();
-        q1.add(dfa.getState(0));
-        q1.add(dfa.getState(1));
-        q1.add(dfa.getState(2));
-        q1.add(dfa.getState(3));
-        q1.add(dfa.getState(4));
-        Set<State> q2 = new HashSet<>();
-        q2.add(dfa.getState(2));
-        q2.add(dfa.getState(3));
-        q2.add(dfa.getState(4));
-
         // get the pair graph of the test dfa using the state subsets above
-        Fst pairGraph = Utils.getPairGraph(dfa, q1, q2);
+        Fst pairGraph = Utils.getPairGraph(fig3A, fig3AQ1, fig3AQ2);
 
-        assertTrue( dfa.getStateCount() == 5 );
+        assertTrue( pairGraph.getStateCount() == 23 );
     }
 
     /**
      * Test that the delta_i transition function works.
      */
+    @Test
     public void testDeltaI() {
-        // import test dfa
-        Convert.setRegexToSplitOn("\\s+");
-        Fst dfa = Convert.importFst("test_pairgraph_1");
-
-        // get subsets of states from test dfa
-        Set<State> q1 = new HashSet<>();
-        q1.add(dfa.getState(0));
-        q1.add(dfa.getState(1));
-        q1.add(dfa.getState(2));
-        q1.add(dfa.getState(3));
-        q1.add(dfa.getState(4));
-        Set<State> q2 = new HashSet<>();
-        q2.add(dfa.getState(2));
-        q2.add(dfa.getState(3));
-        q2.add(dfa.getState(4));
-
         // test transition function delta_1
-        assertTrue(Utils.deltaI(dfa, q1, "1", "a").equals("2"));
-        assertTrue(Utils.deltaI(dfa, q1, "1", "b").equals(Utils.UNUSED_SYMBOL));
-        assertTrue(Utils.deltaI(dfa, q1, "1", "c").equals(Utils.UNUSED_SYMBOL));
+        assertTrue(Utils.deltaI(fig3A, fig3AQ1, "1", "a").equals("2"));
+        assertTrue(Utils.deltaI(fig3A, fig3AQ1, "1", "b").equals(Utils.UNUSED_SYMBOL));
+        assertTrue(Utils.deltaI(fig3A, fig3AQ1, "1", "c").equals(Utils.UNUSED_SYMBOL));
 
         // test transition function delta_2
-        assertTrue(Utils.deltaI(dfa, q2, "3", "a").equals("4"));
-        assertTrue(Utils.deltaI(dfa, q1, "3", "b").equals(Utils.UNUSED_SYMBOL));
-        assertTrue(Utils.deltaI(dfa, q1, "3", "c").equals(Utils.UNUSED_SYMBOL));
+        assertTrue(Utils.deltaI(fig3A, fig3AQ2, "3", "a").equals("4"));
+        assertTrue(Utils.deltaI(fig3A, fig3AQ1, "3", "b").equals(Utils.UNUSED_SYMBOL));
+        assertTrue(Utils.deltaI(fig3A, fig3AQ1, "3", "c").equals(Utils.UNUSED_SYMBOL));
     }
 
     /**
      * Test pair graph creation.
      */
+    @Test
     public void testPairGraph() {
-        // import test dfa
-        Convert.setRegexToSplitOn("\\s+");
-        Fst dfa = Convert.importFst("test_pairgraph_1");
-
-        // get subsets of states from test dfa
-        Set<State> q1 = new HashSet<>();
-        q1.add(dfa.getState(0));
-        q1.add(dfa.getState(1));
-        q1.add(dfa.getState(2));
-        q1.add(dfa.getState(3));
-        q1.add(dfa.getState(4));
-        Set<State> q2 = new HashSet<>();
-        q2.add(dfa.getState(2));
-        q2.add(dfa.getState(3));
-        q2.add(dfa.getState(4));
-
         // get the pair graph of the test dfa using the state subsets above
-        Fst pairGraph = Utils.getPairGraph(dfa, q1, q2);
+        Fst pairGraph = Utils.getPairGraph(fig3A, fig3AQ1, fig3AQ2);
         System.out.println(pairGraph);
     }
 
     /**
      * Test checking for cycles in graphs.
      */
+    @Test
     public void testAcyclicChecking() {
-        // import test dfa
-        Convert.setRegexToSplitOn("\\s+");
-        Fst dfa = Convert.importFst("test_acyclic_1");
-
         // this graph is cyclic, so isAcyclic should return false
-        assertTrue(!Utils.isAcyclic(dfa));
+        assertTrue(!Utils.isAcyclic(fig3A));
 
         // the pair graph is cyclic too
-        Set<State> q1 = new HashSet<>();
-        q1.add(dfa.getState(0));
-        q1.add(dfa.getState(1));
-        q1.add(dfa.getState(2));
-        q1.add(dfa.getState(3));
-        q1.add(dfa.getState(4));
-        Set<State> q2 = new HashSet<>();
-        q2.add(dfa.getState(2));
-        q2.add(dfa.getState(3));
-        q2.add(dfa.getState(4));
-        assertTrue(!Utils.isAcyclic(Utils.getPairGraph(dfa, q1, q2)));
+        Fst pairGraph = Utils.getPairGraph(fig3A, fig3AQ1, fig3AQ2);
+        assertTrue(!Utils.isAcyclic(pairGraph));
 
-        // import another test dfa
-        Convert.setRegexToSplitOn("\\s+");
-        dfa = Convert.importFst("test_acyclic_2");
 
         // this graph is acyclic, so isAcyclic should return true
-        assertTrue(Utils.isAcyclic(dfa));
+        assertTrue(Utils.isAcyclic(acyclic1));
+    }
+
+    /**
+     * Test checking if two components of a graph are pairwise s-local.
+     */
+    @Test
+    public void testIsPairwiseSLocal() {
+        // Fig. 3 in Kim, McNaughton, McCloskey 1991 (given components are not pairwise s-local)
+        assertTrue(!Utils.isPairwiseSLocal(fig3A, fig3AQ1, fig3AQ2));
+
+        // Fig. 1 in Kim, McNaughton, McCloskey 1991 (given components are not pairwise s-local)
+        assertTrue(!Utils.isPairwiseSLocal(fig1M2, fig1M2Q1, fig1M2Q2));
     }
 }
