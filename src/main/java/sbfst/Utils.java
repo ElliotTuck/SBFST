@@ -731,5 +731,22 @@ public class Utils {
         return false;
     }
 
+    /**
+     * Check if a given component is reachable from a given state in a given DFA.
+     * @param s The given state
+     * @param comp The given component
+     * @param dfa The given DFA
+     * @return true if comp is reachable from s, false otherwise
+     */
+    public static boolean componentIsReachable(State s, ArrayList<State> comp, Fst dfa) {
+        for (State q : comp) {
+            if (isPath(s, q, dfa)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 
 }

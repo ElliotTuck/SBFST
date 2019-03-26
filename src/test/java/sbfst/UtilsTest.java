@@ -173,4 +173,19 @@ public class UtilsTest {
         scc.add(fig2M2_altered.getState(0));
         assertTrue(Utils.hasDescendants(scc, fig2M2_altered));
     }
+
+    /**
+     * Test componentIsReachable().
+     */
+    @Test
+    public void testComponentIsReachable() {
+        ArrayList<State> scc = new ArrayList<>();
+        scc.add(fig3A.getState("1"));
+        scc.add(fig3A.getState("2"));
+        assertTrue(Utils.componentIsReachable(fig3A.getState("1"), scc, fig3A));
+        assertTrue(Utils.componentIsReachable(fig3A.getState("2"), scc, fig3A));
+        assertTrue(!Utils.componentIsReachable(fig3A.getState("3"), scc, fig3A));
+        assertTrue(!Utils.componentIsReachable(fig3A.getState("4"), scc, fig3A));
+        assertTrue(!Utils.componentIsReachable(fig3A.getState("5"), scc, fig3A));
+    }
 }
