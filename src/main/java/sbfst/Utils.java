@@ -789,6 +789,15 @@ public class Utils {
      * @return true if dfa is TS-local w.r.t. scc, false otherwise
      */
     public static boolean isTSLocalWRT(ArrayList<State> scc, Fst dfa) {
+        // find m0
+        ArrayList<State> m0 = getM0(scc, dfa);
+
+        // find the pair graph on m0's set of states and scc's set of states
+        Fst pairGraph = getPairGraph(dfa, new HashSet<>(m0), new HashSet<>(scc));
+
+        // get SCCs of pairGraph
+        ArrayList<ArrayList<State>> SCCs = getSCCs(pairGraph);
+
         return false;   // dummy return
     }
 

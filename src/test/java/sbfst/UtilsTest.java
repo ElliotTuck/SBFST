@@ -228,4 +228,23 @@ public class UtilsTest {
         assertTrue(asteriskStates.contains(pairGraph.getState(Utils.UNUSED_SYMBOL + Utils.DELIMITER + "4")));
         assertTrue(asteriskStates.contains(pairGraph.getState(Utils.UNUSED_SYMBOL + Utils.DELIMITER + "5")));
     }
+
+    @Test
+    public void testTest() {
+        Fst fig3A_copy = Convert.importFst("test_pairgraph_1");
+        Set<State> fig3AQ1_copy = new HashSet<>();
+        fig3AQ1_copy.add(fig3A_copy.getState("1"));
+        fig3AQ1_copy.add(fig3A_copy.getState("2"));
+        fig3AQ1_copy.add(fig3A_copy.getState("3"));
+        fig3AQ1_copy.add(fig3A_copy.getState("4"));
+        fig3AQ1_copy.add(fig3A_copy.getState("5"));
+        Set<State> fig3AQ2_copy = new HashSet<>();
+        fig3AQ2_copy.add(fig3A_copy.getState("3"));
+        fig3AQ2_copy.add(fig3A_copy.getState("4"));
+        fig3AQ2_copy.add(fig3A_copy.getState("5"));
+        Fst pairGraph = Utils.getPairGraph(fig3A_copy, fig3AQ1_copy, fig3AQ2_copy);
+        ((MutableFst) pairGraph).setStart(((MutableFst) fig3A_copy).getState(0));
+        ArrayList<ArrayList<State>> SCCs = Utils.getSCCs(pairGraph);
+        System.out.println(SCCs);
+    }
 }
