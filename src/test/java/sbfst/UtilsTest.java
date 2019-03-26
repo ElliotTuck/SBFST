@@ -151,15 +151,6 @@ public class UtilsTest {
     }
 
     /**
-     * Test isLocallyTestable().
-     */
-    @Test
-    public void testIsLocallyTestable() {
-        // Fig. 1, M1 in Kim, McNaugton, McCloskey 1991 (is locally testable)
-        assertTrue(Utils.isLocallyTestable(fig1M1));
-    }
-
-    /**
      * Test hasDescendants().
      */
     @Test
@@ -267,5 +258,17 @@ public class UtilsTest {
         comp.clear();
         comp.add(pairGraph.getState("4,4"));
         assertTrue(!Utils.isPathFromComponentToAsteriskState(comp, pairGraph));
+    }
+
+    /**
+     * Test isLocallyTestable().
+     */
+    @Test
+    public void testIsLocallyTestable() {
+        // Fig. 1, M1 in Kim, McNaugton, McCloskey 1991 (is locally testable)
+        assertTrue(Utils.isLocallyTestable(fig1M1));
+
+        // Fig. 1, M2 in Kim, McNaughton, McCloskey 1991 (is NOT locally testable)
+        assertTrue(!Utils.isLocallyTestable(fig1M2));
     }
 }

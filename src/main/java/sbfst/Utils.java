@@ -76,8 +76,41 @@ public class Utils {
             }
         }
 
-        // TODO: check that graph is TS-local
-        return true;   // dummy return
+        // check that graph is TS-local
+        while (true) {
+            ArrayList<ArrayList<State>> graphSCCs = getSCCs(dfa);
+            if (graphSCCs.size() == 0) {
+                return true;
+            }
+            for (ArrayList<State> graphSCC : graphSCCs) {
+                if (hasDescendants(graphSCC, dfa)) {
+                    continue;
+                }
+                ArrayList<State> m0 = getM0(graphSCC, dfa);
+                Fst pairGraph = getPairGraph(dfa, new HashSet<>(m0), new HashSet<>(graphSCC));
+                ((MutableFst) pairGraph).setStart(((MutableFst) pairGraph).getState(0));
+                if (isTSLocalWRT(graphSCC, dfa)) {
+                    // if about to delete all the state, just return true (because there will be no SCCs in the next round)
+                    if (dfa.getStateCount() == graphSCC.size()) {
+                        return true;
+                    }
+                    // change the start state to a state that isn't going to be deleted
+                    if (graphSCC.contains(dfa.getStartState())) {
+                        for (int i = 0; i < dfa.getStateCount(); i++) {
+                            State s = dfa.getState(i);
+                            if (!graphSCC.contains(s)) {
+                                ((MutableFst) dfa).setStart((MutableState) s);
+                                break;
+                            }
+                        }
+                    }
+                    ((MutableFst) dfa).deleteStates((Collection) graphSCC);
+                    break;
+                } else {
+                    return false;
+                }
+            }
+        }
     }
 
     /**
@@ -818,7 +851,12 @@ public class Utils {
         ArrayList<ArrayList<State>> pairGraphSCCs = getSCCs(pairGraph);
 
         // check if there is a path from an SCC in the pair graph to a state of the form (t,*) or (*,t)
-        return false;   // dummy return
+        for (ArrayList<State> pairGraphSCC : pairGraphSCCs) {
+            if (pairGraphSCC.size() > 1 && isPathFromComponentToAsteriskState(pairGraphSCC, pairGraph)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
