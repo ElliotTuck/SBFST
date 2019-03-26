@@ -247,4 +247,25 @@ public class UtilsTest {
         ArrayList<ArrayList<State>> SCCs = Utils.getSCCs(pairGraph);
         System.out.println(SCCs);
     }
+
+    /**
+     * Test isPathFromComponentToAsteriskState().
+     */
+    @Test
+    public void testIsPathFromComponentToAsteriskState() {
+        Fst pairGraph = Utils.getPairGraph(fig3A, fig3AQ1, fig3AQ2);
+        ((MutableFst) pairGraph).setStart(((MutableFst) pairGraph).getState(0));
+        ArrayList<State> comp = new ArrayList<>();
+        comp.add(pairGraph.getState("1,3"));
+        comp.add(pairGraph.getState("2,4"));
+        assertTrue(!Utils.isPathFromComponentToAsteriskState(comp, pairGraph));
+
+        comp.clear();
+        comp.add(pairGraph.getState("5,3"));
+        assertTrue(Utils.isPathFromComponentToAsteriskState(comp, pairGraph));
+
+        comp.clear();
+        comp.add(pairGraph.getState("4,4"));
+        assertTrue(!Utils.isPathFromComponentToAsteriskState(comp, pairGraph));
+    }
 }

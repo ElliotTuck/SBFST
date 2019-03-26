@@ -783,6 +783,24 @@ public class Utils {
     }
 
     /**
+     * Check if there is a path from a given component to a state of the form (t,*) or (*,t) in a given pair graph.
+     * @param comp The given component
+     * @param pairGraph The given pair graph
+     * @return true if there is a path, false otherwise
+     */
+    public static boolean isPathFromComponentToAsteriskState(ArrayList<State> comp, Fst pairGraph) {
+        ArrayList<State> asteriskStates = getAsteriskStates(pairGraph);
+        for (State componentState : comp) {
+            for (State asteriskState : asteriskStates) {
+                if (isPath(componentState, asteriskState, pairGraph)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Check if a state transition graph is TS-local with respect to a given SCC.
      * @param scc The given SCC
      * @param dfa The state transition graph (represented here as a DFA)
@@ -796,8 +814,10 @@ public class Utils {
         Fst pairGraph = getPairGraph(dfa, new HashSet<>(m0), new HashSet<>(scc));
 
         // get SCCs of pairGraph
-        ArrayList<ArrayList<State>> SCCs = getSCCs(pairGraph);
+        ((MutableFst) pairGraph).setStart(((MutableFst) pairGraph).getState(0));   // this is a bit of a hack
+        ArrayList<ArrayList<State>> pairGraphSCCs = getSCCs(pairGraph);
 
+        // check if there is a path from an SCC in the pair graph to a state of the form (t,*) or (*,t)
         return false;   // dummy return
     }
 
