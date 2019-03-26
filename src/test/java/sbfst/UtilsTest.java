@@ -43,15 +43,15 @@ public class UtilsTest {
         Convert.setRegexToSplitOn("\\s+");
         fig3A = Convert.importFst("test_pairgraph_1");
         fig3AQ1 = new HashSet<>();
-        fig3AQ1.add(fig3A.getState(0));
-        fig3AQ1.add(fig3A.getState(1));
-        fig3AQ1.add(fig3A.getState(2));
-        fig3AQ1.add(fig3A.getState(3));
-        fig3AQ1.add(fig3A.getState(4));
+        fig3AQ1.add(fig3A.getState("1"));
+        fig3AQ1.add(fig3A.getState("2"));
+        fig3AQ1.add(fig3A.getState("3"));
+        fig3AQ1.add(fig3A.getState("4"));
+        fig3AQ1.add(fig3A.getState("5"));
         fig3AQ2 = new HashSet<>();
-        fig3AQ2.add(fig3A.getState(2));
-        fig3AQ2.add(fig3A.getState(3));
-        fig3AQ2.add(fig3A.getState(4));
+        fig3AQ2.add(fig3A.getState("3"));
+        fig3AQ2.add(fig3A.getState("4"));
+        fig3AQ2.add(fig3A.getState("5"));
         acyclic1 = Convert.importFst("test_acyclic_1");
         fig1M2 = Convert.importFst("fig1M2");
         fig1M2Q1 = new HashSet<>();
@@ -210,5 +210,22 @@ public class UtilsTest {
         m0.add(fig3A.getState("4"));
         m0.add(fig3A.getState("5"));
         assertTrue(Utils.getM0(scc, fig3A).equals(m0));
+    }
+
+    /**
+     * Test getAsteriskStates().
+     */
+    @Test
+    public void testGetAsteriskStates() {
+        Fst pairGraph = Utils.getPairGraph(fig3A, fig3AQ1, fig3AQ2);
+        ArrayList<State> asteriskStates = Utils.getAsteriskStates(pairGraph);
+        assertTrue(asteriskStates.contains(pairGraph.getState("1" + Utils.DELIMITER + Utils.UNUSED_SYMBOL)));
+        assertTrue(asteriskStates.contains(pairGraph.getState("2" + Utils.DELIMITER + Utils.UNUSED_SYMBOL)));
+        assertTrue(asteriskStates.contains(pairGraph.getState("3" + Utils.DELIMITER + Utils.UNUSED_SYMBOL)));
+        assertTrue(asteriskStates.contains(pairGraph.getState("4" + Utils.DELIMITER + Utils.UNUSED_SYMBOL)));
+        assertTrue(asteriskStates.contains(pairGraph.getState("5" + Utils.DELIMITER + Utils.UNUSED_SYMBOL)));
+        assertTrue(asteriskStates.contains(pairGraph.getState(Utils.UNUSED_SYMBOL + Utils.DELIMITER + "3")));
+        assertTrue(asteriskStates.contains(pairGraph.getState(Utils.UNUSED_SYMBOL + Utils.DELIMITER + "4")));
+        assertTrue(asteriskStates.contains(pairGraph.getState(Utils.UNUSED_SYMBOL + Utils.DELIMITER + "5")));
     }
 }

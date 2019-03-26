@@ -764,4 +764,32 @@ public class Utils {
         return m0;
     }
 
+    /**
+     * Get the states of a pair graph of the form (t,*) or (*,t).
+     * @param pairGraph The given pair graph
+     * @return a list of states in pairGraph of the form (t,*) or (*,t)
+     */
+    public static ArrayList<State> getAsteriskStates(Fst pairGraph) {
+        ArrayList<State> asteriskStates = new ArrayList<>();
+        for (int i = 0; i < pairGraph.getStateCount(); i++) {
+            State s = pairGraph.getState(i);
+            String sName = pairGraph.getStateSymbols().invert().keyForId(i);
+            String[] sLabels = sName.split(DELIMITER);
+            if (sLabels[0].equals(UNUSED_SYMBOL) || sLabels[1].equals(UNUSED_SYMBOL)) {
+                asteriskStates.add(s);
+            }
+        }
+        return asteriskStates;
+    }
+
+    /**
+     * Check if a state transition graph is TS-local with respect to a given SCC.
+     * @param scc The given SCC
+     * @param dfa The state transition graph (represented here as a DFA)
+     * @return true if dfa is TS-local w.r.t. scc, false otherwise
+     */
+    public static boolean isTSLocalWRT(ArrayList<State> scc, Fst dfa) {
+        return false;   // dummy return
+    }
+
 }
