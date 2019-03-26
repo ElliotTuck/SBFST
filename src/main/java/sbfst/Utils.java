@@ -747,6 +747,21 @@ public class Utils {
         return false;
     }
 
-
+    /**
+     * Get the component m0 (defined in Part IV of Kim, McNaughton, McCloskey 1991) given a DFA and an SCC in the DFA.
+     * @param scc The given scc
+     * @param dfa The given DFA
+     * @return m0
+     */
+    public static ArrayList<State> getM0(ArrayList<State> scc, Fst dfa) {
+        ArrayList<State> m0 = new ArrayList<>();
+        for (int i = 0; i < dfa.getStateCount(); i++) {
+            State s = dfa.getState(i);
+            if (componentIsReachable(s, scc, dfa)) {
+                m0.add(s);
+            }
+        }
+        return m0;
+    }
 
 }

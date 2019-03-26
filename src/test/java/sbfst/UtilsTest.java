@@ -188,4 +188,27 @@ public class UtilsTest {
         assertTrue(!Utils.componentIsReachable(fig3A.getState("4"), scc, fig3A));
         assertTrue(!Utils.componentIsReachable(fig3A.getState("5"), scc, fig3A));
     }
+
+    /**
+     * Test getM0().
+     */
+    @Test
+    public void testGetM0() {
+        ArrayList<State> scc = new ArrayList<>();
+        scc.add(fig3A.getState("1"));
+        scc.add(fig3A.getState("2"));
+        assertTrue(Utils.getM0(scc, fig3A).equals(scc));
+
+        scc.clear();
+        scc.add(fig3A.getState("3"));
+        scc.add(fig3A.getState("4"));
+        scc.add(fig3A.getState("5"));
+        ArrayList<State> m0 = new ArrayList<>();
+        m0.add(fig3A.getState("1"));
+        m0.add(fig3A.getState("2"));
+        m0.add(fig3A.getState("3"));
+        m0.add(fig3A.getState("4"));
+        m0.add(fig3A.getState("5"));
+        assertTrue(Utils.getM0(scc, fig3A).equals(m0));
+    }
 }
