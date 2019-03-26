@@ -3,6 +3,7 @@ package sbfst;
 import com.github.steveash.jopenfst.*;
 import com.github.steveash.jopenfst.io.*;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.*;
@@ -27,6 +28,12 @@ public class UtilsTest {
     Fst fig1M1;
     Set<State> fig1M1Q1;
     Set<State> fig1M1Q2;
+
+    Fst fig1M1NoSyms;
+    Set<State> fig1M1Q1NoSyms;
+    Set<State> fig1M1Q2NoSyms;
+
+    Fst fig2M2_altered;
 
     /**
      * Run before each test case to initialize the testing environment.
@@ -62,6 +69,16 @@ public class UtilsTest {
         fig1M1Q1.add(fig1M1.getState(0));
         fig1M1Q1.add(fig1M1.getState(1));
         fig1M1Q1.add(fig1M1.getState(2));
+        fig1M1NoSyms = Convert.importFst("fig1M1_no_syms");
+        fig1M1Q1NoSyms = new HashSet<>();
+        fig1M1Q1NoSyms.add(fig1M1NoSyms.getState(0));
+        fig1M1Q1NoSyms.add(fig1M1NoSyms.getState(1));
+        fig1M1Q1NoSyms.add(fig1M1NoSyms.getState(2));
+        fig1M1Q2NoSyms = new HashSet<>();
+        fig1M1Q2NoSyms.add(fig1M1NoSyms.getState(0));
+        fig1M1Q2NoSyms.add(fig1M1NoSyms.getState(1));
+        fig1M1Q2NoSyms.add(fig1M1NoSyms.getState(2));
+        fig2M2_altered = Convert.importFst("fig2M2");
     }
 
     /**
@@ -114,7 +131,6 @@ public class UtilsTest {
         Fst pairGraph = Utils.getPairGraph(fig3A, fig3AQ1, fig3AQ2);
         assertTrue(!Utils.isAcyclic(pairGraph));
 
-
         // this graph is acyclic, so isAcyclic should return true
         assertTrue(Utils.isAcyclic(acyclic1));
     }
@@ -132,5 +148,29 @@ public class UtilsTest {
 
         // Fig. 1, M1 in Kim, McNaughton, McCloskey 1991 (give components are pairwise s-local)
         assertTrue(Utils.isPairwiseSLocal(fig1M1, fig1M1Q1, fig1M1Q2));
+    }
+
+    /**
+     * Test isLocallyTestable().
+     */
+    @Test
+    public void testIsLocallyTestable() {
+        // Fig. 1, M1 in Kim, McNaugton, McCloskey 1991 (is locally testable)
+        assertTrue(Utils.isLocallyTestable(fig1M1));
+    }
+
+    /**
+     * Test hasDescendants().
+     */
+    @Test
+    public void testHasDescendants() {
+        ArrayList<State> scc = new ArrayList<>();
+        scc.add(fig2M2_altered.getState(1));
+        scc.add(fig2M2_altered.getState(2));
+        assertTrue(!Utils.hasDescendants(scc, fig2M2_altered));
+
+        scc.clear();
+        scc.add(fig2M2_altered.getState(0));
+        assertTrue(Utils.hasDescendants(scc, fig2M2_altered));
     }
 }
