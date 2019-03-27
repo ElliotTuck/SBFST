@@ -6,6 +6,7 @@ import java.util.*;
 
 public class Utils {
 
+    // TODO: comment about this
     public static final String DELIMITER = ",";
 
     public static final String UNUSED_SYMBOL = "*";
@@ -83,6 +84,7 @@ public class Utils {
                 return true;
             }
             for (ArrayList<State> graphSCC : graphSCCs) {
+                // TODO: comment about always having an SCC with no descendants
                 if (hasDescendants(graphSCC, dfa)) {
                     continue;
                 }
@@ -94,7 +96,7 @@ public class Utils {
                     if (dfa.getStateCount() == graphSCC.size()) {
                         return true;
                     }
-                    // change the start state to a state that isn't going to be deleted
+                    // JOpenFST prevents deleting start state, so change the start state to a state that isn't going to be deleted
                     if (graphSCC.contains(dfa.getStartState())) {
                         for (int i = 0; i < dfa.getStateCount(); i++) {
                             State s = dfa.getState(i);
@@ -852,6 +854,16 @@ public class Utils {
 
         // check if there is a path from an SCC in the pair graph to a state of the form (t,*) or (*,t)
         for (ArrayList<State> pairGraphSCC : pairGraphSCCs) {
+            if (pairGraphSCC.size() == 1) {
+                State s = pairGraphSCC.get(0);
+                for (Arc arc : s.getArcs()) {
+                    if (arc.getNextState().equals(s)) {
+                        if (isPathFromComponentToAsteriskState(pairGraphSCC, pairGraph)) {
+                            return false;
+                        }
+                    }
+                }
+            }
             if (pairGraphSCC.size() > 1 && isPathFromComponentToAsteriskState(pairGraphSCC, pairGraph)) {
                 return false;
             }

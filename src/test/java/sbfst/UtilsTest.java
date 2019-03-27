@@ -270,5 +270,9 @@ public class UtilsTest {
 
         // Fig. 1, M2 in Kim, McNaughton, McCloskey 1991 (is NOT locally testable)
         assertTrue(!Utils.isLocallyTestable(fig1M2));
+
+        // exactly one a
+        Fst exactlyOneA = Convert.importFst("exactly_one_a");
+        assertTrue(!Utils.isLocallyTestable(exactlyOneA));
     }
 }
