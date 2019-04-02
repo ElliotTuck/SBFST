@@ -21,7 +21,7 @@ b = A("b")
 
 
 def lg_containing_str(x,i):
-    return (sigma4Star + pynini.closure(b,2,2) + sigma4Star).minimize() 
+    return (sigma4Star + pynini.closure(b,i,i) + sigma4Star).minimize()
 
 def lg_containing_ssq(x,i):
     return (pynini.closure(sigma4Star + x + sigma4Star,i,i)).minimize()
@@ -55,7 +55,8 @@ lt=dict()
 lt[0] = lg_containing_str(b,2)
 
 # LT4 , at least one bbbb or at least one aaaa
-lt[1] = lg_containing_str(b,4) + lg_containing_str(a,4)
+lt[1] = pynini.union(lg_containing_str(b,4), lg_containing_str(a,4))
+# lt[1] = lg_containing_str(b,4) + lg_containing_str(a,4)
 
 # LT4 , at least one bbbb and at least one aaaa
 lt[2] = pynini.intersect(lg_containing_str(b,4), lg_containing_str(a,4))
@@ -72,7 +73,8 @@ pt=dict()
 pt[0] = lg_containing_ssq(b,2)
 
 # PT4 , at least one bbbb or at least one aaaa
-pt[1] = lg_containing_ssq(b,4) + lg_containing_ssq(a,4)
+pt[1] = pynini.union(lg_containing_ssq(b,4), lg_containing_ssq(a,4))
+# pt[1] = lg_containing_ssq(b,4) + lg_containing_ssq(a,4)
 
 # PT4 , at least one bbbb and at least one aaaa
 pt[2] = pynini.intersect(lg_containing_ssq(b,4), lg_containing_ssq(a,4))
@@ -116,7 +118,18 @@ for x in lg_classes:
     for i in list(range(len(lg_class))):
         lg_class[i].optimize()
         filename = name+str(i)
-        lg_class[i].write(filename+".fsa")
+        # lg_class[i].write(filename+".fsa")
+        with open('../src/test/resources/' + filename + '.fst.txt', 'w') as f_out:
+            f_out.write(str(lg_class[i]))
+        with open('../src/test/resources/' + filename + '.states.syms', 'w') as f_out:
+            for i in range(lg_class[i].num_states()):
+                f_out.write(str(i) + '\t' + str(i) + '\n')
+        with open('../src/test/resources/' + filename + '.input.syms', 'w') as f_out:
+            f_out.write('a\t0\nb\t1\nc\t2\nd\t3')
+        with open('../src/test/resources/' + filename + '.output.syms', 'w') as f_out:
+            f_out.write('a\t0\nb\t1\nc\t2\nd\t3')
+        # print(filename)
+        # print(lg_class[i])
         # include only if you want to see a drawing of the fsa
         # a.draw(filename+".dot",title=filename,acceptor=True)
 

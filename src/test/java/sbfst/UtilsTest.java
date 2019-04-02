@@ -274,5 +274,61 @@ public class UtilsTest {
         // exactly one a
         Fst exactlyOneA = Convert.importFst("exactly_one_a");
         assertTrue(!Utils.isLocallyTestable(exactlyOneA));
+
+        // sl0.fst.txt
+        Fst sl0 = Convert.importFst("sl0");
+        assertTrue(Utils.isLocallyTestable(sl0));
+
+        // sl1.fst.txt
+        Fst sl1 = Convert.importFst("sl1");
+        assertTrue(Utils.isLocallyTestable(sl1));
+
+        // sl2.fst.txt
+        Fst sl2 = Convert.importFst("sl2");
+        assertTrue(Utils.isLocallyTestable(sl2));
+
+        // lt0.fst.txt
+        Fst lt0 = Convert.importFst("lt0");
+        assertTrue(Utils.isLocallyTestable(lt0));
+
+        // lt1.fst.txt (failed)
+        Fst lt1 = Convert.importFst("lt1");
+        assertTrue(Utils.isLocallyTestable(lt1));
+
+        // lt2.fst.txt
+        Fst lt2 = Convert.importFst("lt2");
+        assertTrue(Utils.isLocallyTestable(lt2));
+
+        // lt3.fst.txt
+        Fst lt3 = Convert.importFst("lt3");
+        assertTrue(Utils.isLocallyTestable(lt3));
+
+        // sp0.fst.txt
+        Fst sp0 = Convert.importFst("sp0");
+        assertTrue(!Utils.isLocallyTestable(sp0));
+
+        // sp1.fst.txt
+        Fst sp1 = Convert.importFst("sp1");
+        assertTrue(!Utils.isLocallyTestable(sp1));
+
+        // sp2.fst.txt
+        Fst sp2 = Convert.importFst("sp2");
+        assertTrue(!Utils.isLocallyTestable(sp2));
+
+        // pt0.fst.txt
+        Fst pt0 = Convert.importFst("pt0");
+        assertTrue(!Utils.isLocallyTestable(pt0));
+
+        // pt1.fst.txt
+        Fst pt1 = Convert.importFst("pt1");
+        assertTrue(!Utils.isLocallyTestable(pt1));
+
+        // pt2.fst.txt
+        Fst pt2 = Convert.importFst("pt2");
+        assertTrue(!Utils.isLocallyTestable(pt2));
+
+        // pt3.fst.txt
+        Fst pt3 = Convert.importFst("pt3");
+        assertTrue(!Utils.isLocallyTestable(pt3));
     }
 }
