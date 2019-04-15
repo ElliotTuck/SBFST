@@ -354,6 +354,61 @@ public class Utils {
 		return UNUSED_SYMBOL;
 	}
 
+/**
+	* Test for TS locality in the given DFA
+	* @param dfa The DFA to test for TS locality
+	* @return true if DFA is TS local, false otherwise
+	*/
+public static boolean isTSLocal(Fst dfa){
+		ArrayList<ArrayList<State>> SCCs = getSCCs(dfa);
+
+		ArrayList<Integer> ancestors = getAncestors(SCCs, dfa);
+
+		ArrayList<ArrayList<State>> noDescendants = hasNoDescendants(SCCs, ancestors);
+
+		while (noDescendants.size() != 0){
+				for (ArrayList<State> SCC: noDescendants){
+					// find ancestors of SCC, create a set m_o which is all ancestors + m_j
+					// find pair graph of m_o and m_j
+					// check for a path from an SCC of G_oj to a (*, t) or (t, *) state
+					// if path exists: return false
+					// else remove m_j from graph
+				}
+				// recompute noDescendants
+		}
+
+		return true;
+
+}
+
+
+/**
+	* Find out which SCCs have no descendants
+	* @param SCCs the SCCs to search through
+	* @param ancestors the ancestors of each SCC, where
+	* the integers at the ith index correspond to the indicies
+	* of the SCCs of the ith SCC
+	* @param dfa dfa to which the SCCs belong
+	* @return an arrayList of SCCs who have no descendants
+	*/
+public static ArrayList<ArrayList<State>> hasNoDescendants(ArrayList<ArrayList<State>> SCCs, ArrayList<ArrayList<Integer>> ancestors){
+
+	HashMap<ArrayList<State>, Boolean> hasDescendants = new HashMap<>();
+
+	for (ArrayList<Integer> sccAncestors: ancestors){
+			for (Integer SCC: sccAncestors){
+					hasDescendants.put(SCCs.get(SCC), true);
+			}
+	}
+
+	ArrayList<ArrayList<State>> noDescendants = new ArrayList<>();
+
+	for (ArrayList<State> SCC: SCCs){
+		if (!hasDescendants.contains(SCC)){
+			noDescendants.add(SCC);
+		}
+	}
+}
 
 	/**
 	* Find all maximal strongly connected components of the given dfa
