@@ -871,4 +871,84 @@ public class Utils {
         return true;
     }
 
+    /**
+     * Compute the stabilizer of a given state
+     * i.e., the set of states that bring us from state p back to p
+     * @param state The given state
+     * @return set of symbols in the stabilizer
+     */
+    public static Set<Integer> computeStabilizer(State state){
+
+        Set<Integer> stabilizer = new HashSet<>();
+
+        for (Arc arc : state.getArcs()){
+          if (arc.getNextState().equals(state)){
+            stabilizer.add(arc.getIlabel());
+          }
+        }
+        return stabilizer;
+    }
+
+
+    /**
+     * Compute the fst of the stabilizer
+     * i.e., the fst containing only arcs with those labels
+     * @param fst The given fst
+     * @param stabilizer given set of labels to include in final fst
+     * @return fst with only arcs with labels in stabilizer set
+     */
+    public static Fst computeStabilizerFst(Fst fst, Set<Integer> stabilizer){
+      // creates deep clone of fst
+      MutableFst copyFst = MutableFst.copyFrom(fst);
+
+      for (int i = 0; i < fst.getStateCount(); i++){
+        MutableState state = copyFst.getState(i);
+        List<MutableArc> outgoingArcs = state.getArcs();
+        for (MutableArc arc: outgoingArcs){
+          if (!stabilizer.contains(arc.getIlabel())){
+            outgoingArcs.remove(arc);
+          }
+        }
+      }
+      return copyFst;
+    }
+
+
+    /**
+     * Create a non oriented copy,
+     * i.e., a copy of the fst where for every arc from a to b in fst,
+     * there is an arc from a to b and from b to a in the copy
+     * @param fst The given fst to copy
+     * @return non oriented copy of fst
+     */
+    public static Fst nonOrientedCopy(Fst fst){
+      MutableFst nonOrientedFst = MutableFst.copyFrom(fst);
+
+      //return nonOrientedFst;
+      for (int i = 0; i < nonOrientedFst.getStateCount(); i++){
+        System.out.println(nonOrientedFst.getStateCount());
+        MutableState state = nonOrientedFst.getState(i);
+        List<MutableArc> outgoingArcs = state.getArcs();
+        for (MutableArc arc: outgoingArcs){
+          MutableState nextState = arc.getNextState();
+          boolean alreadySet = false;
+          for (MutableArc nextStateArc : nextState.getArcs()){
+            if (nextStateArc.getNextState().equals(state)){
+              alreadySet = true;
+              break;
+            }
+          }
+
+          // create a new arc to state and add it to nextState's arc list
+          if (!alreadySet){
+            int label = arc.getIlabel();
+            MutableArc newArc = new MutableArc(label, label, 0, state);
+            nextState.getArcs().add(newArc);
+          }
+        }
+      }
+
+      return nonOrientedFst;
+    }
+
 }

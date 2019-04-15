@@ -3,6 +3,7 @@ package sbfst;
 import com.github.steveash.jopenfst.*;
 import com.github.steveash.jopenfst.io.*;
 import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Main class.
@@ -19,20 +20,29 @@ public class App {
     public static void main(String[] args) {
       String fileName = args[0];
       Convert.setRegexToSplitOn("\\s+");
-      MutableFst originalFst = Convert.importFst(fileName);
+      Fst originalFst = Convert.importFst(fileName);
 
-      Fst synMonoid = Utils.getSM(originalFst);
+      Set<Integer> stabilizer = new HashSet<>();
+      stabilizer.add(0);
 
-      Convert.setUseSymbolIdsInText(true);
-      Convert.export(synMonoid, fileName + "_syntactic_monoid");
+      Fst stabilizerFst = Utils.computeStabilizerFst(originalFst, stabilizer);
+      Convert.export(stabilizerFst, fileName + "_stabilizerFst");
 
-      int period = Utils.isAperiodic(synMonoid);
-      if (period == -1) {
-        System.out.println("The input language is aperiodic.");
-      } else {
-        System.out.println("The input language is periodic with period "
-          + period + ".");
-      }
+      // Fst nonOriented = Utils.nonOrientedCopy(originalFst);
+      // Convert.export(nonOriented, fileName + "_nonOrientedCopy");
+
+      // Fst synMonoid = Utils.getSM(originalFst);
+      //
+      // Convert.setUseSymbolIdsInText(true);
+      // Convert.export(synMonoid, fileName + "_syntactic_monoid");
+      //
+      // int period = Utils.isAperiodic(synMonoid);
+      // if (period == -1) {
+      //   System.out.println("The input language is aperiodic.");
+      // } else {
+      //   System.out.println("The input language is periodic with period "
+      //     + period + ".");
+      // }
 
       // ArrayList<ArrayList<State>> SCCs = Utils.getSCCs(originalFst);
       // int counter = 0;
