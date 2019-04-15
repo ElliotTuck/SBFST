@@ -331,4 +331,56 @@ public class UtilsTest {
         Fst pt3 = Convert.importFst("pt3");
         assertTrue(!Utils.isLocallyTestable(pt3));
     }
+
+    /**
+     * Test isPiecewiseTestable().
+     */
+    @Test
+    public void testIsPiecewiseTestable() {
+        // pt0.fst.txt
+        Fst pt0 = Convert.importFst("pt0");
+        assertTrue(Utils.isPiecewiseTestable(pt0));
+
+        // sl0.fst.txt
+        Fst sl0 = Convert.importFst("sl0");
+        assertTrue(!Utils.isPiecewiseTestable(sl0));
+
+        // sl1.fst.txt
+        Fst sl1 = Convert.importFst("sl1");
+        assertTrue(!Utils.isPiecewiseTestable(sl1));
+
+        // sl2.fst.txt
+        Fst sl2 = Convert.importFst("sl2");
+        assertTrue(!Utils.isPiecewiseTestable(sl2));
+
+        // lt0.fst.txt
+        Fst lt0 = Convert.importFst("lt0");
+        assertTrue(!Utils.isPiecewiseTestable(lt0));
+
+        // lt1.fst.txt
+        Fst lt1 = Convert.importFst("lt1");
+        assertTrue(!Utils.isPiecewiseTestable(lt1));
+
+        // lt2.fst.txt
+        Fst lt2 = Convert.importFst("lt2");
+        assertTrue(!Utils.isPiecewiseTestable(lt2));
+
+        // lt3.fst.txt
+        Fst lt3 = Convert.importFst("lt3");
+        assertTrue(!Utils.isPiecewiseTestable(lt3));
+    }
+
+    /**
+     * Test withoutSelfLoops().
+     */
+    @Test
+    public void testWithoutSelfLoops() {
+        // pt0.fst.txt
+        Fst pt0 = Convert.importFst("pt0");
+        Fst pt0WithoutSelfLoops = Utils.withoutSelfLoops(pt0);
+        System.out.println(pt0.toString());
+        System.out.println(pt0WithoutSelfLoops.toString());
+        assertTrue(pt0WithoutSelfLoops.getStateCount() == 3);
+        assertTrue(Utils.isAcyclic(pt0WithoutSelfLoops));
+    }
 }

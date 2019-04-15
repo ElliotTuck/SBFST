@@ -116,6 +116,53 @@ public class Utils {
     }
 
     /**
+     * Determine if the given FST is piecewise testable or not. For now it is assumed that the input automaton is a
+     * minimized DFA although future versions could be altered to allows fro a broader set of inputs.
+     * @param dfa The input DFA to test, assumed to be minimized.
+     * @return true if dfa is piecewise testable, false otherwise
+     */
+    public static boolean isPiecewiseTestable(Fst dfa) {
+//        if (!isAcyclic(dfa)) {
+//            return false;
+//        }
+        if (!isAcyclic(withoutSelfLoops(dfa))) {
+            return false;
+        }
+        System.out.println("found acyclic graph");
+        for (int i = 0; i < dfa.getStateCount(); i++) {
+            State p = dfa.getState(i);
+            Set<Integer> stabilizer = computeStabilizer(p);
+            Fst stabilizerGraph = computeStabilizerFst(dfa, stabilizer);
+            Fst N = nonOrientedCopy(stabilizerGraph);
+            ArrayList<ArrayList<State>> nonOrientedSCCs = getSCCs(N);
+            ArrayList<State> C = null;
+            for (ArrayList<State> SCC : nonOrientedSCCs) {
+                if (SCC.contains(p)) {
+                    C = SCC;
+                    break;
+                }
+            }
+            for (State rInC : C) {
+                if (rInC.equals(p)) {
+                    continue;
+                }
+                State rInN = N.getState(rInC.getId());
+                boolean checkNextState = false;
+                for (Arc rArc : rInN.getArcs()) {
+                    if (!rArc.getNextState().equals(rInN)) {
+                        checkNextState = true;
+                        break;
+                    }
+                }
+                if (!checkNextState) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
      * Given a syntactic monoid and the mapping from state labels to
      * associated index values, as well as the mapping from states to
      * their shortest input string representations, return a 2d int
@@ -479,7 +526,6 @@ public class Utils {
     private static boolean isAcyclicHelper(State s, StateState[] stateStates) {
         stateStates[s.getId()] = StateState.DISCOVERED;
         for (Arc a : s.getArcs()) {
-            System.out.println("next state: " + a.getNextState().getId());
             State t = a.getNextState();
             if (stateStates[t.getId()] == StateState.DISCOVERED) {   // found a back edge, thus there is a cycle
                 return false;
@@ -904,13 +950,36 @@ public class Utils {
       for (int i = 0; i < fst.getStateCount(); i++){
         MutableState state = copyFst.getState(i);
         List<MutableArc> outgoingArcs = state.getArcs();
+        List<MutableArc> arcsToRemove = new ArrayList<>();
         for (MutableArc arc: outgoingArcs){
           if (!stabilizer.contains(arc.getIlabel())){
-            outgoingArcs.remove(arc);
+//            outgoingArcs.remove(arc);
+              arcsToRemove.add(arc);
           }
+        }
+        for (MutableArc arc : arcsToRemove) {
+            outgoingArcs.remove(arc);
         }
       }
       return copyFst;
+    }
+
+    public static Fst withoutSelfLoops(Fst dfa) {
+        MutableFst copy = MutableFst.emptyWithCopyOfSymbols(dfa);
+        for (int i = 0; i < dfa.getStateCount(); i++) {
+            State state = dfa.getState(i);
+            copy.addState(new MutableState(state.getFinalWeight()), dfa.getStateSymbols().invert().keyForId(i));
+        }
+        for (int i = 0; i < dfa.getStateCount(); i++) {
+            State state = dfa.getState(i);
+            MutableState copyState = copy.getState(i);
+            for (Arc arc : state.getArcs()) {
+                if (!arc.getNextState().equals(state)) {
+                    copy.addArc(copyState, arc.getIlabel(), arc.getOlabel(), copy.getState(arc.getNextState().getId()), arc.getNextState().getFinalWeight());
+                }
+            }
+        }
+        return copy;
     }
 
 
