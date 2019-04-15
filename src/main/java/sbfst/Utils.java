@@ -122,13 +122,13 @@ public class Utils {
      * @return true if dfa is piecewise testable, false otherwise
      */
     public static boolean isPiecewiseTestable(Fst dfa) {
+        // NOTE: it seemed wrong to care about self-loops when checking acyclicity here
 //        if (!isAcyclic(dfa)) {
 //            return false;
 //        }
         if (!isAcyclic(withoutSelfLoops(dfa))) {
             return false;
         }
-        System.out.println("found acyclic graph");
         for (int i = 0; i < dfa.getStateCount(); i++) {
             State p = dfa.getState(i);
             Set<Integer> stabilizer = computeStabilizer(p);
@@ -137,13 +137,15 @@ public class Utils {
             ArrayList<ArrayList<State>> nonOrientedSCCs = getSCCs(N);
             ArrayList<State> C = null;
             for (ArrayList<State> SCC : nonOrientedSCCs) {
-                if (SCC.contains(p)) {
-                    C = SCC;
-                    break;
+                for (State s : SCC) {
+                    if (s.getId() == p.getId()) {
+                        C = SCC;
+                        break;
+                    }
                 }
             }
             for (State rInC : C) {
-                if (rInC.equals(p)) {
+                if (rInC.getId() == p.getId()) {
                     continue;
                 }
                 State rInN = N.getState(rInC.getId());
@@ -964,25 +966,6 @@ public class Utils {
       return copyFst;
     }
 
-    public static Fst withoutSelfLoops(Fst dfa) {
-        MutableFst copy = MutableFst.emptyWithCopyOfSymbols(dfa);
-        for (int i = 0; i < dfa.getStateCount(); i++) {
-            State state = dfa.getState(i);
-            copy.addState(new MutableState(state.getFinalWeight()), dfa.getStateSymbols().invert().keyForId(i));
-        }
-        for (int i = 0; i < dfa.getStateCount(); i++) {
-            State state = dfa.getState(i);
-            MutableState copyState = copy.getState(i);
-            for (Arc arc : state.getArcs()) {
-                if (!arc.getNextState().equals(state)) {
-                    copy.addArc(copyState, arc.getIlabel(), arc.getOlabel(), copy.getState(arc.getNextState().getId()), arc.getNextState().getFinalWeight());
-                }
-            }
-        }
-        return copy;
-    }
-
-
     /**
      * Create a non oriented copy,
      * i.e., a copy of the fst where for every arc from a to b in fst,
@@ -1018,6 +1001,29 @@ public class Utils {
       }
 
       return nonOrientedFst;
+    }
+
+    /**
+     * Get a copy of the input FST with any self-loops removed.
+     * @param fst The FST to remove self-loops from.
+     * @return A copy of fst with self-loops removed.
+     */
+    public static Fst withoutSelfLoops(Fst fst) {
+        MutableFst copy = MutableFst.emptyWithCopyOfSymbols(fst);
+        for (int i = 0; i < fst.getStateCount(); i++) {
+            State state = fst.getState(i);
+            copy.addState(new MutableState(state.getFinalWeight()), fst.getStateSymbols().invert().keyForId(i));
+        }
+        for (int i = 0; i < fst.getStateCount(); i++) {
+            State state = fst.getState(i);
+            MutableState copyState = copy.getState(i);
+            for (Arc arc : state.getArcs()) {
+                if (!arc.getNextState().equals(state)) {
+                    copy.addArc(copyState, arc.getIlabel(), arc.getOlabel(), copy.getState(arc.getNextState().getId()), arc.getNextState().getFinalWeight());
+                }
+            }
+        }
+        return copy;
     }
 
 }

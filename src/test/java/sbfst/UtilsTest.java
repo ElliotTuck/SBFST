@@ -341,6 +341,30 @@ public class UtilsTest {
         Fst pt0 = Convert.importFst("pt0");
         assertTrue(Utils.isPiecewiseTestable(pt0));
 
+        // pt1.fst.txt
+        Fst pt1 = Convert.importFst("pt1");
+        assertTrue(Utils.isPiecewiseTestable(pt1));
+
+        // pt2.fst.txt
+        Fst pt2 = Convert.importFst("pt2");
+        assertTrue(Utils.isPiecewiseTestable(pt2));
+
+        // sp0.fst.txt
+        Fst sp0 = Convert.importFst("sp0");
+        assertTrue(Utils.isPiecewiseTestable(sp0));
+
+        // sp1.fst.txt
+        Fst sp1 = Convert.importFst("sp1");
+        assertTrue(Utils.isPiecewiseTestable(sp1));
+
+        // sp2.fst.txt
+        Fst sp2 = Convert.importFst("sp2");
+        assertTrue(Utils.isPiecewiseTestable(sp2));
+
+        // pt3.fst.txt
+        Fst pt3 = Convert.importFst("pt3");
+        assertTrue(Utils.isPiecewiseTestable(pt3));
+
         // sl0.fst.txt
         Fst sl0 = Convert.importFst("sl0");
         assertTrue(!Utils.isPiecewiseTestable(sl0));
