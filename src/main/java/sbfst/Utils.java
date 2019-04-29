@@ -165,6 +165,16 @@ public class Utils {
     }
 
     /**
+     * Determine if the given FST is locally threshold testable. It is assumed that the input automaton is a minimized
+     * DFA.
+     * @param dfa The input DFA test test, assumed to be minimized.
+     * @return true if dfa is locally threshold testable, false otherwise
+     */
+    public boolean isLocallyThresholdTestable(Fst dfa) {
+        return false;   // dummy return
+    }
+
+    /**
      * Given a syntactic monoid and the mapping from state labels to
      * associated index values, as well as the mapping from states to
      * their shortest input string representations, return a 2d int
@@ -1024,6 +1034,28 @@ public class Utils {
             }
         }
         return copy;
+    }
+
+    /**
+     * Get the reachability matrix for all pairs of states in the given DFA. A state q with index j is reachable from a
+     * state p with index i if and only if reachabilityMatrix[i][j] == true.
+     * @param dfa The DFA to find the reachability matrix for.
+     * @return The reachability matrix for dfa, as a 2D array
+     */
+    public static boolean[][] getReachabilityMatrix(Fst dfa) {
+        int n = dfa.getStateCount();
+        boolean[][] reachabilityMatrix = new boolean[n][n];
+
+        // fill in the matrix with the proper values
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                State p = dfa.getState(i);
+                State q = dfa.getState(j);
+                reachabilityMatrix[i][j] = isPath(p, q, dfa);
+            }
+        }
+
+        return reachabilityMatrix;
     }
 
 }
