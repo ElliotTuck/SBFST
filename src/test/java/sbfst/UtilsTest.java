@@ -365,6 +365,8 @@ public class UtilsTest {
         Fst pt3 = Convert.importFst("pt3");
         assertTrue(Utils.isPiecewiseTestable(pt3));
 
+
+
         // sl0.fst.txt
         Fst sl0 = Convert.importFst("sl0");
         assertTrue(!Utils.isPiecewiseTestable(sl0));
@@ -406,5 +408,43 @@ public class UtilsTest {
         System.out.println(pt0WithoutSelfLoops.toString());
         assertTrue(pt0WithoutSelfLoops.getStateCount() == 3);
         assertTrue(Utils.isAcyclic(pt0WithoutSelfLoops));
+    }
+
+    /**
+     * Test getReachabilityMatrix().
+     */
+    @Test
+    public void testGetReachabilityMatrix() {
+        // lt0.fst.txt
+        Fst lt0 = Convert.importFst("lt0");
+        int n = lt0.getStateCount();
+        boolean[][] reachabilityMatrix = Utils.getReachabilityMatrix(lt0);
+        boolean[][] expectedReachabilityMatrix = new boolean[][]{
+                { true,  true,  true },
+                { true,  true,  true },
+                { false, false, true }
+        };
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                assertTrue(reachabilityMatrix[i][j] == expectedReachabilityMatrix[i][j]);
+            }
+        }
+
+        // lt1.fst.txt
+        Fst lt1 = Convert.importFst("lt1");
+        n = lt1.getStateCount();
+        reachabilityMatrix = Utils.getReachabilityMatrix(lt1);
+        expectedReachabilityMatrix = new boolean[][]{
+                { true,  true,  true,  true,  true },
+                { true,  true,  true,  true,  true },
+                { true,  true,  true,  true,  true },
+                { true,  true,  true,  true,  true },
+                { false, false, false, false, true }
+        };
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                assertTrue(reachabilityMatrix[i][j] == expectedReachabilityMatrix[i][j]);
+            }
+        }
     }
 }
