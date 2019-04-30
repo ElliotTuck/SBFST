@@ -460,4 +460,14 @@ public class UtilsTest {
         Fst lt0 = Convert.importFst("lt0");
         System.out.println(Utils.directProduct(lt0, 2));
     }
+
+    /**
+     * Test isLocallyThresholdTestable().
+     */
+    @Test
+    public void testIsLocallyThresholdTestable() {
+        // lt0.fst.txt
+        Fst lt0 = Convert.importFst("lt0");
+        System.out.println(Utils.isLocallyThresholdTestable(lt0));
+    }
 }
