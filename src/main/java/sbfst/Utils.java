@@ -171,7 +171,30 @@ public class Utils {
      * @return true if dfa is locally threshold testable, false otherwise
      */
     public boolean isLocallyThresholdTestable(Fst dfa) {
-        return false;   // dummy return
+        // get direct product graphs
+        Fst gamma2 = directProduct(dfa, 2);
+        Fst gamma3 = directProduct(dfa, 3);
+
+        // mark SCC nodes in Γ, Γ², Γ³
+        boolean[] gammaSCCNodes = markSCCNodes(dfa);
+        boolean[] gamma2SCCNodes = markSCCNodes(gamma2);
+        boolean[] gamma3SCCNodes = markSCCNodes(gamma3);
+
+        // generate reachability matrices for Γ and Γ²
+        boolean[][] gammaReachabilityMatrix = getReachabilityMatrix(dfa);
+        boolean[][] gamma2ReachabilityMatrix = getReachabilityMatrix(gamma2);
+
+        // check lemma 12
+        if (!checkPQReachability(dfa, gamma2, gammaReachabilityMatrix)) {
+            return false;
+        }
+
+        // check definition 15
+        if (!checkDefinition15(dfa, gamma2, gamma3, gammaReachabilityMatrix, gamma2ReachabilityMatrix)) {
+            return false;
+        }
+
+        return true;   // dummy return
     }
 
     /**
@@ -1214,17 +1237,13 @@ public class Utils {
 
                         // Question: do we not continue this iteration if this is not true??
                         if (pathFromPtoR && pathFromRtoR1 && pathFromPtoQ){
-                            Fst TSCC = getTSCC(p, q, r, r1);
+                            Fst TSCC = getTSCC(p, q, r, r1, gamma, gamma2, gamma3, g2Reachability);
                             if (TSCC.getStateCount() == 0){
                               return false;
                             }
                         }
-
                     }
-
                 }
-
-
             }
         }
 
@@ -1252,7 +1271,28 @@ public class Utils {
             // if g2Reachability[id2][id1]: then if (q,r,t) and (p,r1) are SCC nodes, add t to TSCC
         }
 
+        return null;   // dummy return
+    }
 
+    /**
+     * Mark nodes as being SCC nodes or not.
+     * @param dfa The input DFA to check the nodes of.
+     * @return A boolean array where each element indicates whether the node with that index in dfa is an SCC node.
+     */
+    public static boolean[] markSCCNodes(Fst dfa) {
+        boolean[] ans = new boolean[dfa.getStateCount()];
+        ArrayList<ArrayList<State>> SCCs = getSCCs(dfa);
+        for (int i = 0; i < ans.length; i++) {
+            State s = dfa.getState(i);
+            for (ArrayList<State> SCC : SCCs) {
+                if (SCC.contains(s)) {
+                    ans[i] = true;
+                    break;
+                }
+            }
+            ans[i] = false;
+        }
+        return ans;
     }
 
 
