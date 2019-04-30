@@ -7,10 +7,11 @@ import functools
 
 A = functools.partial(pynini.acceptor) 
 e = pynini.epsilon_machine()
+zero = e - e
+zero.optimize()
 
 # Defining sigma and sigmastar
-
-sigma4 = e
+sigma4 = zero
 for x in list("abcd"): sigma4 = A(x) | sigma4
 sigma4.optimize()
 
@@ -18,6 +19,9 @@ sigma4Star = (sigma4.star).optimize()
 
 a = A("a")
 b = A("b")
+c = A("c")
+d = A("d")
+
 
 
 def lg_containing_str(x,i):
@@ -27,12 +31,12 @@ def lg_containing_ssq(x,i):
     return (pynini.closure(sigma4Star + x + sigma4Star,i,i)).minimize()
 
 
-
 ###############
 # SL Examples #
 ###############
 
-sl = dict()
+sl=dict()
+
 sl[0] = sigma4Star - lg_containing_str(b,2)  # SL2 , forbidden bb
 sl[1] = sigma4Star - lg_containing_str(b,4)  # SL4 , forbidden bbbb
 sl[2] = sigma4Star - lg_containing_str(b,8)  # SL8 , forbidden bbbbbbbb
@@ -62,7 +66,7 @@ lt[1] = pynini.union(lg_containing_str(b,4), lg_containing_str(a,4))
 lt[2] = pynini.intersect(lg_containing_str(b,4), lg_containing_str(a,4))
         
 # LT8 , if b^8 then a^8 (~~~ not b^8 or a^8)
-lt[3] = (sigma4Star - lg_containing_str(b,8)) + lg_containing_str(a,8)
+lt[3] = (sigma4Star - lg_containing_str(b,8)) | lg_containing_str(a,8)
 
 ###############
 # PT Examples #
@@ -80,7 +84,7 @@ pt[1] = pynini.union(lg_containing_ssq(b,4), lg_containing_ssq(a,4))
 pt[2] = pynini.intersect(lg_containing_ssq(b,4), lg_containing_ssq(a,4))
         
 # PT8 , if b^8 then a^8 (~~~ not b^8 or a^8)
-pt[3] = (sigma4Star - lg_containing_ssq(b,8)) + lg_containing_ssq(a,8)
+pt[3] = (sigma4Star - lg_containing_ssq(b,8)) | lg_containing_ssq(a,8)
 
 
 ################
@@ -88,15 +92,68 @@ pt[3] = (sigma4Star - lg_containing_ssq(b,8)) + lg_containing_ssq(a,8)
 ################
 ltt=dict()
 
+# LTT t=2, k=1 "exactly two bs"
+atleast2bs = (lg_containing_str(b,1) + lg_containing_str(b,1)).optimize()
+forbid3bs = (sigma4Star - lg_containing_ssq(b,3)).optimize()
+ltt[0] = atleast2bs * forbid3bs
+
+# LTT t=2, k=2 "exactly two bb substrings"
+atleast2bbs = (lt[0] + lt[0]).optimize()
+forbid3bbs = sigma4Star - (atleast2bbs + lt[0]).optimize()
+ltt[1] = atleast2bbs * forbid3bbs
+
+# LTT t=5, k=2 "exactly five bb substrings"
+atleast5bbs = pynini.closure(lt[0], 5, 5).optimize()
+forbid6bbs = sigma4Star - pynini.closure(lt[0], 6, 6).optimize()
+ltt[2] = atleast5bbs * forbid6bbs
+
+# LTT t=5, k=8 "exactly five b^8 substrings"
+atleast1b8 = pynini.closure(lg_containing_str(b,8), 5, 5).optimize()
+forbid6b8s = sigma4Star - pynini.closure(lg_containing_str(b,8), 6, 6).optimize()
+ltt[3] = atleast1b8 * forbid6b8s
+
+
 ######################
 # Star-Free Examples #
 ######################
 sf=dict()
 
+# every pair of 'b's has at least one 'a' in between
+cdstar = sigma4Star - (lg_containing_str(a,1) | lg_containing_str(b,1))
+cdstar.optimize()
+
+sf[0] = pynini.closure(cdstar + b + cdstar + a + cdstar + b + cdstar)
+
+# every pair of 'b's has at least one 'a' in between and every pair of 'a's has at least one 'b' in between
+
+sf[1] = sf[0] * pynini.closure(cdstar + a + cdstar + b + cdstar + a + cdstar)
+
+sf[2] = sf[0] * ltt[0]
+
+# every pair of 'bb's has 'aa' in between
+filler = sigma4Star - (lg_containing_str(b,2) | lg_containing_str(a,2))
+sf[3] = pynini.closure(filler + b+b + filler + a+a + filler + b+b + filler)
+
+
 ####################
 # Regular Examples #
 ####################
 reg=dict()
+
+evena = pynini.closure(lg_containing_ssq(a,2))
+evenb = pynini.closure(lg_containing_ssq(b,2))
+mod4a = pynini.closure(lg_containing_ssq(a,4))
+mod8a = pynini.closure(lg_containing_ssq(a,8))
+
+reg[0] = evena
+reg[1] = mod4a
+reg[2] = mod8a
+reg[3] = evena  * evenb
+reg[4] = sl[1]  * evena
+reg[5] = sp[1]  * evena
+reg[6] = lt[1]  * evena
+reg[7] = pt[1]  * evena
+reg[8] = ltt[1] * evena
 
 
 pair_names=[(sl,'sl'),
