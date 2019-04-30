@@ -116,6 +116,9 @@ public class UtilsTest {
     public void testPairGraph() {
         // get the pair graph of the test dfa using the state subsets above
         Fst pairGraph = Utils.getPairGraph(fig3A, fig3AQ1, fig3AQ2);
+        for (int i = 0; i < pairGraph.getStateCount(); i++) {
+            System.out.println(pairGraph.getStateSymbols().invert().keyForId(i));
+        }
         System.out.println(pairGraph);
     }
 
@@ -446,5 +449,15 @@ public class UtilsTest {
                 assertTrue(reachabilityMatrix[i][j] == expectedReachabilityMatrix[i][j]);
             }
         }
+    }
+
+    /**
+     * Test directProduct().
+     */
+    @Test
+    public void testDirectProduct() {
+        // lt1.fst.txt
+        Fst lt1 = Convert.importFst("lt1");
+        Utils.directProduct(lt1, 2);
     }
 }

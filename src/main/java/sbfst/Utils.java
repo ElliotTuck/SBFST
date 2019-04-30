@@ -1058,4 +1058,51 @@ public class Utils {
         return reachabilityMatrix;
     }
 
+    /**
+     * Get the direct product of a state transition graph with itself i-1 times.
+     * @param dfa The input state transition graph.
+     * @param i The number of copies of dfa to include in the product.
+     * @return The direct product of dfa with itself i-1 times.
+     */
+    public static Fst directProduct(Fst dfa, int i) {
+        if (i < 1) {
+            return null;   // TODO: handle the invalid input in a better way
+        }
+        if (i == 1) {
+            return dfa;
+        }
+        Iterable<String> stateSyms = dfa.getStateSymbols().symbols();
+        List<String> stateSymsList = new ArrayList<>();
+        for (String stateSym : stateSyms) {
+            stateSymsList.add(stateSym);
+        }
+        List<String> productGraphStateSymbols = getProductGraphStateSymbols(stateSymsList, i);
+        System.out.println(productGraphStateSymbols);
+        return null;   // dummy return
+    }
+
+    /**
+     * Get the states of the product graph given the original graph state symbols and the number of copies of the graph
+     * to include in the product.
+     * @param stateSyms The state symbols of the original graph.
+     * @param i The number of copies of the original graph to include in the product.
+     * @return A list of the new state symbols for the product graph.
+     */
+    private static List<String> getProductGraphStateSymbols(List<String> stateSyms, int i) {
+        // base case
+        if (i <= 1) {
+            return stateSyms;
+        }
+
+        // recursive case
+        List<String> ans = new ArrayList<>();
+        for (String stateSym : stateSyms) {
+            List<String> allRemaining = getProductGraphStateSymbols(stateSyms, i - 1);
+            for (String remaining : allRemaining) {
+                ans.add(stateSym + DELIMITER + remaining);
+            }
+        }
+        return ans;
+    }
+
 }
