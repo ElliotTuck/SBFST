@@ -1105,4 +1105,105 @@ public class Utils {
         return ans;
     }
 
+    /**
+     * Check if for every state (p, q) of Γ^2 if p~q in Γ
+     * if we find such a p,q and p != q, the we return false (is not LTT)
+     * @param gamma2 FST of Γ^2
+     * @param reachabilityMatrix reachability matrix for Γ
+     * @return true if no such p and q are found, false otherwise
+     */
+    public static boolean checkPQReachability(Fst gamma, Fst gamma2, boolean[][] reachabilityMatrix){
+        // Question: are we assuming all nodes of gamma2 are "SCC nodes"?
+
+        SymbolTable gamma2SymbolTable = gamma2.getStateSymbols();
+        SymbolTable gammaSymbolTable = gamma.getStateSymbols();
+
+        for (int i = 0; i < gamma2.getStateCount(); i++){
+            String pqStateSymbol = gamma2SymbolTable.invert().keyForId(i);
+            String[] pAndq = pqStateSymbol.split(",");
+            String pSymbol = pAndq[0];
+            String qSymbol = pAndq[1];
+
+            // if p == q, move on to next state in gamma2
+            if (!(pSymbol.equals(qSymbol))){
+                int pId = gammaSymbolTable.get(pSymbol);
+                int qId = gammaSymbolTable.get(qSymbol);
+
+                boolean pathFromPtoQ = reachabilityMatrix[pId][qId];
+                boolean pathFromQtoP = reachabilityMatrix[qId][pId];
+                if (pathFromPtoQ && pathFromQtoP) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * For every four nodes p, q, r, r1 of gamma, check
+     * r1 reachable from r reachable from p and q reachable from p
+     * if true, make TSCC(p, q, r, r1)
+     * if TSCC is not well defined return false
+     * @param gamma FST of Γ
+     * @param gamma2 FST of Γ^2
+     * @param gamma2 FST of Γ^3
+     * @param g1Reachability reachability matrix for Γ
+     * @param g2Reachability reachability matrix for Γ^2
+     * @return true if we find no reason to return false as defined above, false otherwise
+     */
+    private static boolean checkDefinition15(Fst gamma, Fst gamma2, Fst gamma3, boolean[][] g1Reachability, boolean[][] g2Reachability){
+        for (int p = 0; p < gamma.getStateCount(); p++){
+            for (int q = 0; q < gamma.getStateCount(); q++){
+                for (int r = 0; r < gamma.getStateCount(); r++){
+                    for (int r1 = 0; r1 < gamma.getStateCount(); r1++){
+                        boolean pathFromPtoR = g1Reachability[p][r];
+                        boolean pathFromRtoR1 = g1Reachability[r][r1];
+                        boolean pathFromPtoQ = g1Reachability[p][q];
+
+                        // Question: do we not continue this iteration if this is not true??
+                        if (pathFromPtoR && pathFromRtoR1 && pathFromPtoQ){
+                            Fst TSCC = getTSCC(p, q, r, r1);
+                            if (TSCC.getStateCount() == 0){
+                              return false;
+                            }
+                        }
+
+                    }
+
+                }
+
+
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Make TSCC of all nodes t in gamma such that
+     * (q, t) is reachable from (p,r1) and (q, r, t) and (p, r1) are SCC nodes
+     * @param p
+     * @param q
+     * @param r
+     * @param r1
+     * @param gamma FST of Γ
+     * @param gamma2 FST of Γ^2
+     * @param gamma3 FST of Γ^3
+     * @param g2Reachability reachability matrix for Γ^2
+     * @return Fst of TSCC
+     */
+    private static Fst getTSCC(int p, int q, int r, int r1, Fst gamma, Fst gamma2, Fst gamma3, boolean[][] g2Reachability){
+
+        for (int t = 0; t < gamma.getStateCount(); t++){
+            // id1 =  q,t id from statesymbols
+            // id2 =  p,r1 id from statesymbols
+            // if g2Reachability[id2][id1]: then if (q,r,t) and (p,r1) are SCC nodes, add t to TSCC
+        }
+
+
+    }
+
+
+
 }
