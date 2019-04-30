@@ -204,7 +204,7 @@ public class Utils {
             return false;
         }
 
-        return true;   // dummy return
+        return true;
     }
 
     /**
@@ -1268,7 +1268,18 @@ public class Utils {
     }
 
     /**
-     * Check theorem 16.
+     * Check second condition of Theorem 16. For every 5 nodes p, q, r, q1, r1 of Γ, the three conditions that
+     * TSCC(p,q,r,r1) and TSCC(p,r,q,q1) are non-empty, (p,q1,r1) is an SCC node, and (q1,r1) is reachable from (q,r)
+     * imply that TSCC(p,q,r,r1) = TSCC(p,r,q,q1).
+     * @param gamma The FST of Γ
+     * @param gamma2 The FST of Γ²
+     * @param gamma3 The FST of Γ³
+     * @param g1Reachability The reachability matrix of Γ
+     * @param g2Reachability The reachability matrix of Γ²
+     * @param gamma2SCCNodes Marks which nodes in Γ² are SCC nodes
+     * @param gamma3SCCNodes Marks which nodes in Γ³ are SCC nodes
+     * @param gammaSCCs The SCCs of Γ
+     * @return true if the second condition of Theorem 16 holds, false otherwise
      */
     private static boolean checkTheorem16(Fst gamma, Fst gamma2, Fst gamma3, boolean[][] g1Reachability,
                                           boolean[][] g2Reachability, boolean[] gamma2SCCNodes,
@@ -1330,10 +1341,17 @@ public class Utils {
      * @param gamma FST of Γ
      * @param gamma2 FST of Γ^2
      * @param gamma3 FST of Γ^3
+     * @param g1Reachability Reachability matrix for Γ
      * @param g2Reachability reachability matrix for Γ^2
-     * @return Fst of TSCC
+     * @param gamma2SCCNodes Marks which nodes in Γ² are SCC nodes
+     * @param gamma3SCCNodes Marks which nodes in Γ³ are SCC nodes
+     * @param gammaSCCs The SCCs of Γ
+     * @return TSCC as a list of states
      */
-    private static ArrayList<State> getTSCC(int p, int q, int r, int r1, Fst gamma, Fst gamma2, Fst gamma3, boolean[][] g1Reachability, boolean[][] g2Reachability, boolean[] gamma2SCCNodes, boolean[] gamma3SCCNodes, ArrayList<ArrayList<State>> gammaSCCs){
+    private static ArrayList<State> getTSCC(int p, int q, int r, int r1, Fst gamma, Fst gamma2, Fst gamma3,
+                                            boolean[][] g1Reachability, boolean[][] g2Reachability,
+                                            boolean[] gamma2SCCNodes, boolean[] gamma3SCCNodes,
+                                            ArrayList<ArrayList<State>> gammaSCCs){
         // ensure reachability from p to r, r to r1, and p to q
         boolean pathFromPtoR = g1Reachability[p][r];
         boolean pathFromRtoR1 = g1Reachability[r][r1];
@@ -1402,7 +1420,5 @@ public class Utils {
         }
         return ans;
     }
-
-
 
 }
