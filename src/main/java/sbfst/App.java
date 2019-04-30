@@ -18,15 +18,22 @@ public class App {
   *********************************
   */
     public static void main(String[] args) {
-      String fileName = args[0];
+      //String fileName = args[0];
       Convert.setRegexToSplitOn("\\s+");
-      Fst originalFst = Convert.importFst(fileName);
+      // Fst originalFst = Convert.importFst(fileName);
+      //
+      // Set<Integer> stabilizer = new HashSet<>();
+      // stabilizer.add(0);
+      //
+      // Fst stabilizerFst = Utils.computeStabilizerFst(originalFst, stabilizer);
+      // Convert.export(stabilizerFst, fileName + "_stabilizerFst");
 
-      Set<Integer> stabilizer = new HashSet<>();
-      stabilizer.add(0);
+      Fst gamma = Convert.importFst("pt0");
+      Fst gamma2 = Convert.importFst("pt0G");
 
-      Fst stabilizerFst = Utils.computeStabilizerFst(originalFst, stabilizer);
-      Convert.export(stabilizerFst, fileName + "_stabilizerFst");
+      //boolean[][] gammaReachability = Utils.getReachabilityMatrix(gamma);
+      //boolean passedLemma12 = Utils.checkPQReachability(gamma, gamma2, gammaReachability);
+      //System.out.println("Result: " + passedLemma12);
 
       // Fst nonOriented = Utils.nonOrientedCopy(originalFst);
       // Convert.export(nonOriented, fileName + "_nonOrientedCopy");
