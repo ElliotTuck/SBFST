@@ -175,6 +175,9 @@ public class Utils {
         Fst gamma2 = directProduct(dfa, 2);
         Fst gamma3 = directProduct(dfa, 3);
 
+        // get SCCs of Γ
+        ArrayList<ArrayList<State>> gammaSCCs = getSCCs(dfa);
+
         // mark SCC nodes in Γ, Γ², Γ³
         boolean[] gammaSCCNodes = markSCCNodes(dfa);
         boolean[] gamma2SCCNodes = markSCCNodes(gamma2);
@@ -190,7 +193,14 @@ public class Utils {
         }
 
         // check definition 15
-        if (!checkDefinition15(dfa, gamma2, gamma3, gammaReachabilityMatrix, gamma2ReachabilityMatrix, gamma2SCCNodes, gamma3SCCNodes, getSCCs(dfa))) {
+        if (!checkDefinition15(dfa, gamma2, gamma3, gammaReachabilityMatrix, gamma2ReachabilityMatrix, gamma2SCCNodes,
+                gamma3SCCNodes, gammaSCCs)) {
+            return false;
+        }
+
+        // check theorem 16
+        if (!checkTheorem16(dfa, gamma2, gamma3, gammaReachabilityMatrix, gamma2ReachabilityMatrix, gamma2SCCNodes,
+                gamma3SCCNodes, gammaSCCs)) {
             return false;
         }
 
@@ -1195,8 +1205,8 @@ public class Utils {
         // Question: are we assuming all nodes of gamma2 are "SCC nodes"?
         // Elliot: I added an input that should allow us to check if a node of Γ​² is an SCC node
 
-        SymbolTable gamma2SymbolTable = gamma2.getStateSymbols();
         SymbolTable gammaSymbolTable = gamma.getStateSymbols();
+        SymbolTable gamma2SymbolTable = gamma2.getStateSymbols();
 
         for (int i = 0; i < gamma2.getStateCount(); i++){
             String pqStateSymbol = gamma2SymbolTable.invert().keyForId(i);
@@ -1206,8 +1216,8 @@ public class Utils {
 
             // if (p,q) is not an SCC node or if p == q, move on to next state in gamma2
             if (gamma2SCCNodes[i] && !(pSymbol.equals(qSymbol))){
-                int pId = gammaSymbolTable.get(pSymbol);
-                int qId = gammaSymbolTable.get(qSymbol);
+                int pId = gamma.getState(pSymbol).getId();
+                int qId = gamma.getState(qSymbol).getId();
 
                 boolean pathFromPtoQ = reachabilityMatrix[pId][qId];
                 boolean pathFromQtoP = reachabilityMatrix[qId][pId];
@@ -1227,33 +1237,79 @@ public class Utils {
      * if TSCC is not well defined return false
      * @param gamma FST of Γ
      * @param gamma2 FST of Γ^2
-     * @param gamma2 FST of Γ^3
+     * @param gamma3 FST of Γ^3
      * @param g1Reachability reachability matrix for Γ
      * @param g2Reachability reachability matrix for Γ^2
+     * @param gamma2SCCNodes Marks which nodes in Γ² are SCC nodes
+     * @param gamma3SCCNodes Marks which nodes in Γ³ are SCC nodes
+     * @param gammaSCCs The SCCs of Γ
      * @return true if we find no reason to return false as defined above, false otherwise
      */
-    private static boolean checkDefinition15(Fst gamma, Fst gamma2, Fst gamma3, boolean[][] g1Reachability, boolean[][] g2Reachability, boolean[] gamma2SCCNodes, boolean[] gamma3SCCNodes, ArrayList<ArrayList<State>> gammaSCCs){
+    private static boolean checkDefinition15(Fst gamma, Fst gamma2, Fst gamma3, boolean[][] g1Reachability,
+                                             boolean[][] g2Reachability, boolean[] gamma2SCCNodes,
+                                             boolean[] gamma3SCCNodes, ArrayList<ArrayList<State>> gammaSCCs){
         for (int p = 0; p < gamma.getStateCount(); p++){
             for (int q = 0; q < gamma.getStateCount(); q++){
                 for (int r = 0; r < gamma.getStateCount(); r++){
                     for (int r1 = 0; r1 < gamma.getStateCount(); r1++){
-                        boolean pathFromPtoR = g1Reachability[p][r];
-                        boolean pathFromRtoR1 = g1Reachability[r][r1];
-                        boolean pathFromPtoQ = g1Reachability[p][q];
-
-                        // make sure (p,r1) and (q,r) are SCC nodes
-                        SymbolTable.InvertedSymbolTable gammaSyms = gamma.getStateSymbols().invert();
-                        String pAndr1Sym = gammaSyms.keyForId(p) + DELIMITER + gammaSyms.keyForId(r1);
-                        String qAndrSym = gammaSyms.keyForId(q) + DELIMITER + gammaSyms.keyForId(r);
-                        int pAndr1Index = gamma2.getState(pAndr1Sym).getId();
-                        int qAndrIndex = gamma2.getState(qAndrSym).getId();
-
                         // Question: do we not continue this iteration if this is not true??
-                        if (pathFromPtoR && pathFromRtoR1 && pathFromPtoQ &&
-                                gamma2SCCNodes[pAndr1Index] && gamma2SCCNodes[qAndrIndex]){
-                            ArrayList<State> TSCC = getTSCC(p, q, r, r1, gamma, gamma2, gamma3, g2Reachability, gamma3SCCNodes, gammaSCCs);
-                            if (TSCC == null){
-                              return false;
+                        // get TSCC and check if it is well defined
+                        ArrayList<State> TSCC = getTSCC(p, q, r, r1, gamma, gamma2, gamma3, g1Reachability,
+                                g2Reachability, gamma2SCCNodes, gamma3SCCNodes, gammaSCCs);
+                        if (TSCC == null){
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check theorem 16.
+     */
+    private static boolean checkTheorem16(Fst gamma, Fst gamma2, Fst gamma3, boolean[][] g1Reachability,
+                                          boolean[][] g2Reachability, boolean[] gamma2SCCNodes,
+                                          boolean[] gamma3SCCNodes, ArrayList<ArrayList<State>> gammaSCCs) {
+        int n = gamma.getStateCount();
+        for (int p = 0; p < n; p++) {
+            for (int q = 0; q < n; q++) {
+                for (int r = 0; r < n; r++) {
+                    for (int q1 = 0; q1 < n; q1++) {
+                        for (int r1 = 0; r1 < n; r1++) {
+                            ArrayList<State> TSCCpqrr1 = getTSCC(p, q, r, r1, gamma, gamma2, gamma3, g1Reachability,
+                                    g2Reachability, gamma2SCCNodes, gamma3SCCNodes, gammaSCCs);
+                            ArrayList<State> TSCCprqq1 = getTSCC(p, r, q, q1, gamma, gamma2, gamma3, g1Reachability,
+                                    g2Reachability, gamma2SCCNodes, gamma3SCCNodes, gammaSCCs);
+                            if (TSCCpqrr1 == null || TSCCprqq1 == null) {
+                                return false;
+                            }
+
+                            // check that (p,q1,r1) is an SCC node
+                            SymbolTable.InvertedSymbolTable gammaSyms = gamma.getStateSymbols().invert();
+                            String pAndq1Andr1Sym = gammaSyms.keyForId(p) + DELIMITER + gammaSyms.keyForId(q1) +
+                                    DELIMITER + gammaSyms.keyForId(r1);
+                            int pAndq1Andr1Index = gamma3.getState(pAndq1Andr1Sym).getId();
+                            if (!gamma3SCCNodes[pAndq1Andr1Index]) {
+                                return false;
+                            }
+
+                            // check that (q1,r1) is reachable from (q,r)
+                            String qAndrSym = gammaSyms.keyForId(q) + DELIMITER + gammaSyms.keyForId(r);
+                            String q1Andr1Sym = gammaSyms.keyForId(q1) + DELIMITER + gammaSyms.keyForId(r1);
+                            int qAndrIndex = gamma.getState(qAndrSym).getId();
+                            int q1Andr1Index = gamma.getState(q1Andr1Sym).getId();
+                            if (!g2Reachability[qAndrIndex][q1Andr1Index]) {
+                                return false;
+                            }
+
+                            // check that TSCC(p,q,r,r1) = TSCC(p,r,q,q1)
+                            Set<State> TSCCpqrr1Set = new HashSet<>(TSCCpqrr1);
+                            Set<State> TSCCprqq1Set = new HashSet<>(TSCCprqq1);
+                            if (!TSCCpqrr1Set.equals(TSCCprqq1Set)) {
+                                return false;
                             }
                         }
                     }
@@ -1277,9 +1333,27 @@ public class Utils {
      * @param g2Reachability reachability matrix for Γ^2
      * @return Fst of TSCC
      */
-    private static ArrayList<State> getTSCC(int p, int q, int r, int r1, Fst gamma, Fst gamma2, Fst gamma3, boolean[][] g2Reachability, boolean[] gamma3SCCNodes, ArrayList<ArrayList<State>> gammaSCCs){
-        Set<State> validTStates = new HashSet<>();
+    private static ArrayList<State> getTSCC(int p, int q, int r, int r1, Fst gamma, Fst gamma2, Fst gamma3, boolean[][] g1Reachability, boolean[][] g2Reachability, boolean[] gamma2SCCNodes, boolean[] gamma3SCCNodes, ArrayList<ArrayList<State>> gammaSCCs){
+        // ensure reachability from p to r, r to r1, and p to q
+        boolean pathFromPtoR = g1Reachability[p][r];
+        boolean pathFromRtoR1 = g1Reachability[r][r1];
+        boolean pathFromPtoQ = g1Reachability[p][q];
+        if (!pathFromPtoR || !pathFromRtoR1 || !pathFromPtoQ) {
+            return null;
+        }
+
+        // make sure (p,r1) and (q,r) are SCC nodes
         SymbolTable.InvertedSymbolTable gammaSyms = gamma.getStateSymbols().invert();
+        String pAndr1Sym = gammaSyms.keyForId(p) + DELIMITER + gammaSyms.keyForId(r1);
+        String qAndrSym = gammaSyms.keyForId(q) + DELIMITER + gammaSyms.keyForId(r);
+        int pAndr1Index = gamma2.getState(pAndr1Sym).getId();
+        int qAndrIndex = gamma2.getState(qAndrSym).getId();
+
+        if (!gamma2SCCNodes[pAndr1Index] || !gamma2SCCNodes[qAndrIndex]) {
+            return null;
+        }
+
+        Set<State> validTStates = new HashSet<>();
 
         for (int t = 0; t < gamma.getStateCount(); t++){
             // id1 =  q,t id from statesymbols
