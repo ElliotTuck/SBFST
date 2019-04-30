@@ -1197,11 +1197,11 @@ public class Utils {
      * if we find such a p,q and p != q, the we return false (is not LTT)
      * @param gamma The original state transition graph
      * @param gamma2 FST of Γ^2
-     * @param reachabilityMatrix reachability matrix for Γ
+     * @param g1Reachability reachability matrix for Γ
      * @param gamma2SCCNodes Marks which nodes in Γ² are SCC nodes
      * @return true if no such p and q are found, false otherwise
      */
-    public static boolean checkPQReachability(Fst gamma, Fst gamma2, boolean[][] reachabilityMatrix, boolean[] gamma2SCCNodes){
+    public static boolean checkPQReachability(Fst gamma, Fst gamma2, boolean[][] g1Reachability, boolean[] gamma2SCCNodes){
         // Question: are we assuming all nodes of gamma2 are "SCC nodes"?
         // Elliot: I added an input that should allow us to check if a node of Γ​² is an SCC node
 
@@ -1219,8 +1219,8 @@ public class Utils {
                 int pId = gamma.getState(pSymbol).getId();
                 int qId = gamma.getState(qSymbol).getId();
 
-                boolean pathFromPtoQ = reachabilityMatrix[pId][qId];
-                boolean pathFromQtoP = reachabilityMatrix[qId][pId];
+                boolean pathFromPtoQ = g1Reachability[pId][qId];
+                boolean pathFromQtoP = g1Reachability[qId][pId];
                 if (pathFromPtoQ && pathFromQtoP) {
                     return false;
                 }
