@@ -1068,17 +1068,68 @@ public class Utils {
         if (i < 1) {
             return null;   // TODO: handle the invalid input in a better way
         }
+
         if (i == 1) {
             return dfa;
         }
+
+        Fst productGraph = new MutableFst();
+        ((MutableFst) productGraph).useStateSymbols();
+
+        // get the new state symbols of the product graph
         Iterable<String> stateSyms = dfa.getStateSymbols().symbols();
         List<String> stateSymsList = new ArrayList<>();
         for (String stateSym : stateSyms) {
             stateSymsList.add(stateSym);
         }
         List<String> productGraphStateSymbols = getProductGraphStateSymbols(stateSymsList, i);
-        System.out.println(productGraphStateSymbols);
-        return null;   // dummy return
+        for (String stateSym : productGraphStateSymbols) {
+            ((MutableFst) productGraph).addState(new MutableState(), stateSym);
+        }
+
+        // add transitions to the product graph
+        for (int j = 0; j < productGraph.getStateCount(); j++) {
+            for (int k = 0; k < productGraph.getStateCount(); k++) {
+                String startStateSym = productGraph.getStateSymbols().invert().keyForId(j);
+                String[] originalStartStateSyms = startStateSym.split(DELIMITER);
+
+                String endStateSym = productGraph.getStateSymbols().invert().keyForId(k);
+                String[] originalEndStateSyms = endStateSym.split(DELIMITER);
+
+                // add a transition with label sigma between two states in the product graph only if there is a
+                // transition labeled sigma between states p and q for each pair of states in the original graph with
+                // corresponding state symbols from the list of symbols that make up the two state in the product graph
+                for (String transitionSym : dfa.getInputSymbols().symbols()) {
+                    boolean shouldAddArc = true;
+                    for (int m = 0; m < originalStartStateSyms.length; m++) {
+                        State originalGraphP = dfa.getState(originalStartStateSyms[m]);
+                        State originalGraphQ = dfa.getState(originalEndStateSyms[m]);
+
+                        boolean foundArcWithTransitionSym = false;
+                        for (Arc arc : originalGraphP.getArcs()) {
+                            if (arc.getNextState().equals(originalGraphQ) &&
+                                    dfa.getInputSymbols().invert().keyForId(arc.getIlabel()).equals(transitionSym)) {
+                                foundArcWithTransitionSym = true;
+                                break;
+                            }
+                        }
+
+                        if (!foundArcWithTransitionSym) {
+                            // did not find transition labeled transitionSym from p to q in original graph, so we should
+                            // not add a corresponding arc in the product graph
+                            shouldAddArc = false;
+                            break;
+                        }
+                    }
+                    if (shouldAddArc) {
+                        ((MutableFst) productGraph).addArc(((MutableFst) productGraph).getState(j), transitionSym,
+                                transitionSym, ((MutableFst) productGraph).getState(k), 0);
+                    }
+                }
+            }
+        }
+
+        return productGraph;
     }
 
     /**

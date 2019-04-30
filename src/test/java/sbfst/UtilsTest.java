@@ -456,8 +456,8 @@ public class UtilsTest {
      */
     @Test
     public void testDirectProduct() {
-        // lt1.fst.txt
-        Fst lt1 = Convert.importFst("lt1");
-        Utils.directProduct(lt1, 2);
+        // lt0.fst.txt
+        Fst lt0 = Convert.importFst("lt0");
+        System.out.println(Utils.directProduct(lt0, 2));
     }
 }
