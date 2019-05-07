@@ -468,6 +468,30 @@ public class UtilsTest {
     public void testIsLocallyThresholdTestable() {
         // lt0.fst.txt
         Fst lt0 = Convert.importFst("lt0");
-        System.out.println(Utils.isLocallyThresholdTestable(lt0));
+        assertTrue(Utils.isLocallyThresholdTestable(lt0));
+
+        // lt1.fst.txt
+        Fst lt1 = Convert.importFst("lt1");
+        assertTrue(Utils.isLocallyThresholdTestable(lt1));
+
+        // lt2.fst.txt
+        Fst lt2 = Convert.importFst("lt2");
+        assertTrue(Utils.isLocallyThresholdTestable(lt2));
+
+        // lt3.fst.txt
+        Fst lt3 = Convert.importFst("lt3");
+        assertTrue(Utils.isLocallyThresholdTestable(lt3));
+
+        // ltt0.fst.txt
+        Fst ltt0 = Convert.importFst("ltt0");
+        assertTrue(Utils.isLocallyThresholdTestable(ltt0));
+
+        // ltt1.fst.txt
+        Fst ltt1 = Convert.importFst("ltt1");
+        assertTrue(Utils.isLocallyThresholdTestable(ltt1));
+
+        // ltt2.fst.txt
+        Fst ltt2 = Convert.importFst("ltt2");
+        assertTrue(Utils.isLocallyThresholdTestable(ltt2));
     }
 }
