@@ -651,7 +651,28 @@ public class Utils {
             }
         }
 
-        return SCCs;
+        // extra check: ensure that any SCCs of size 1 actually consist of a state with a self-loop
+        ArrayList<ArrayList<State>> tmp = new ArrayList<>();
+        for (ArrayList<State> SCC : SCCs) {
+            if (SCC.size() == 1) {
+                State s = SCC.get(0);
+                boolean hasSelfLoop = false;
+                for (Arc arc : s.getArcs()) {
+                    if (arc.getNextState().equals(s)) {
+                        hasSelfLoop = true;
+                        break;
+                    }
+                }
+                if (hasSelfLoop) {
+                    tmp.add(SCC);
+                }
+            } else {
+                tmp.add(SCC);
+            }
+        }
+
+//        return SCCs;
+        return tmp;
     }
 
     /**
@@ -1205,7 +1226,6 @@ public class Utils {
         // Question: are we assuming all nodes of gamma2 are "SCC nodes"?
         // Elliot: I added an input that should allow us to check if a node of Γ​² is an SCC node
 
-        SymbolTable gammaSymbolTable = gamma.getStateSymbols();
         SymbolTable gamma2SymbolTable = gamma2.getStateSymbols();
 
         for (int i = 0; i < gamma2.getStateCount(); i++){
@@ -1261,14 +1281,6 @@ public class Utils {
 
                         // only consider the positive cases where p -> r -> r1 and p -> q
                         if (!pathFromPtoR || !pathFromRtoR1 || !pathFromPtoQ) {
-                            continue;
-                        }
-
-                        // (p,r1) must be an SCC-node
-                        SymbolTable.InvertedSymbolTable gammaSyms = gamma.getStateSymbols().invert();
-                        String pSymbol = gammaSyms.keyForId(p);
-                        String r1Symbol = gammaSyms.keyForId(r1);
-                        if (!gamma2SCCNodes[gamma2.getState(pSymbol + DELIMITER + r1Symbol).getId()]) {
                             continue;
                         }
 
@@ -1346,8 +1358,8 @@ public class Utils {
                             // only continue checking if (q1,r1) is reachable from (q,r)
                             String qAndrSym = gammaSyms.keyForId(q) + DELIMITER + gammaSyms.keyForId(r);
                             String q1Andr1Sym = gammaSyms.keyForId(q1) + DELIMITER + gammaSyms.keyForId(r1);
-                            int qAndrIndex = gamma.getState(qAndrSym).getId();
-                            int q1Andr1Index = gamma.getState(q1Andr1Sym).getId();
+                            int qAndrIndex = gamma2.getState(qAndrSym).getId();
+                            int q1Andr1Index = gamma2.getState(q1Andr1Sym).getId();
                             if (!g2Reachability[qAndrIndex][q1Andr1Index]) {
 //                                return false;
                                 continue;
@@ -1389,7 +1401,15 @@ public class Utils {
                                             boolean[][] g1Reachability, boolean[][] g2Reachability,
                                             boolean[] gamma2SCCNodes, boolean[] gamma3SCCNodes,
                                             ArrayList<ArrayList<State>> gammaSCCs){
-        // make sure (p,r1) and (q,r) are SCC nodes
+        // ensure reachability from p to r, r to r1, and p to q
+        boolean pathFromPtoR = g1Reachability[p][r];
+        boolean pathFromRtoR1 = g1Reachability[r][r1];
+        boolean pathFromPtoQ = g1Reachability[p][q];
+        if (!pathFromPtoR || !pathFromRtoR1 || !pathFromPtoQ) {
+            return null;
+        }
+
+        // make sure (p,r1) and (q,r) are SCC-nodes
         SymbolTable.InvertedSymbolTable gammaSyms = gamma.getStateSymbols().invert();
         String pAndr1Sym = gammaSyms.keyForId(p) + DELIMITER + gammaSyms.keyForId(r1);
         String qAndrSym = gammaSyms.keyForId(q) + DELIMITER + gammaSyms.keyForId(r);
@@ -1404,7 +1424,6 @@ public class Utils {
         for (int t = 0; t < gamma.getStateCount(); t++){
             // id1 =  q,t id from statesymbols
             // id2 =  p,r1 id from statesymbols
-            // if g2Reachability[id2][id1]: then if (q,r,t) and (p,r1) are SCC nodes, add t to TSCC
             String gamma2StartStateSym = gammaSyms.keyForId(p) + DELIMITER + gammaSyms.keyForId(r1);
             String gamma2EndStateSym = gammaSyms.keyForId(q) + DELIMITER + gammaSyms.keyForId(t);
             int id2 = gamma2.getState(gamma2StartStateSym).getId();
@@ -1435,6 +1454,13 @@ public class Utils {
      */
     public static boolean[] markSCCNodes(Fst dfa) {
         boolean[] ans = new boolean[dfa.getStateCount()];
+
+        // start by assuming none of the nodes are SCC-nodes
+        for (int i = 0; i < ans.length; i++) {
+            ans[i] = false;
+        }
+
+        // figure out which nodes actually are SCC-nodes
         ArrayList<ArrayList<State>> SCCs = getSCCs(dfa);
         for (int i = 0; i < ans.length; i++) {
             State s = dfa.getState(i);
@@ -1444,7 +1470,6 @@ public class Utils {
                     break;
                 }
             }
-            ans[i] = false;
         }
         return ans;
     }
