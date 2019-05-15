@@ -242,6 +242,24 @@ public class UtilsTest {
     }
 
     /**
+     * Test isPath().
+     */
+    @Test
+    public void testIsPath() {
+        // test_isPath_0.fst.txt
+        Fst test0 = Convert.importFst("test_isPath_0");
+        State zero = test0.getState("0");
+        State one = test0.getState("1");
+        State two = test0.getState("2");
+        assertTrue(!Utils.isPath(zero, two, test0));
+        assertTrue(!Utils.isPath(two, zero, test0));
+        assertTrue(!Utils.isPath(one, zero, test0));
+        assertTrue(!Utils.isPath(one, two, test0));
+        assertTrue(Utils.isPath(zero, one, test0));
+        assertTrue(Utils.isPath(two, one, test0));
+    }
+
+    /**
      * Test isPathFromComponentToAsteriskState().
      */
     @Test
@@ -305,6 +323,10 @@ public class UtilsTest {
         Fst lt3 = Convert.importFst("lt3");
         assertTrue(Utils.isLocallyTestable(lt3));
 
+        // lt4.fst.txt
+        Fst lt4 = Convert.importFst("lt4");
+        assertTrue(Utils.isLocallyTestable(lt4));
+
         // sp0.fst.txt
         Fst sp0 = Convert.importFst("sp0");
         assertTrue(!Utils.isLocallyTestable(sp0));
@@ -332,6 +354,10 @@ public class UtilsTest {
         // pt3.fst.txt
         Fst pt3 = Convert.importFst("pt3");
         assertTrue(!Utils.isLocallyTestable(pt3));
+
+        // pt4.fst.txt
+        Fst pt4 = Convert.importFst("pt4");
+        assertTrue(!Utils.isLocallyTestable(pt4));
     }
 
     /**
@@ -367,6 +393,10 @@ public class UtilsTest {
         Fst pt3 = Convert.importFst("pt3");
         assertTrue(Utils.isPiecewiseTestable(pt3));
 
+        // pt4.fst.txt
+        Fst pt4 = Convert.importFst("pt4");
+        assertTrue(Utils.isPiecewiseTestable(pt4));
+
         // sl0.fst.txt
         Fst sl0 = Convert.importFst("sl0");
         assertTrue(!Utils.isPiecewiseTestable(sl0));
@@ -391,9 +421,13 @@ public class UtilsTest {
         Fst lt2 = Convert.importFst("lt2");
         assertTrue(!Utils.isPiecewiseTestable(lt2));
 
-        // lt3.fst.txt
-        Fst lt3 = Convert.importFst("lt3");
-        assertTrue(!Utils.isPiecewiseTestable(lt3));
+//        // lt3.fst.txt
+//        Fst lt3 = Convert.importFst("lt3");
+//        assertTrue(!Utils.isPiecewiseTestable(lt3));
+
+        // lt4.fst.txt
+        Fst lt4 = Convert.importFst("lt4");
+        assertTrue(!Utils.isPiecewiseTestable(lt4));
     }
 
     /**
@@ -455,7 +489,11 @@ public class UtilsTest {
     public void testDirectProduct() {
         // lt0.fst.txt
         Fst lt0 = Convert.importFst("lt0");
-        System.out.println(Utils.directProduct(lt0, 2));
+        int n = lt0.getStateCount();
+        Fst lt0_2 = Utils.directProduct(lt0, 2);
+        assertTrue(lt0_2.getStateCount() == n*n);
+        Convert.export(lt0_2, "lt0_2");
+        System.out.println(lt0_2);
     }
 
     /**
@@ -491,7 +529,9 @@ public class UtilsTest {
 //        Fst ltt2 = Convert.importFst("ltt2");
 //        assertTrue(Utils.isLocallyThresholdTestable(ltt2));
 //
-//        // pt0.fst.txtl
+        // pt0.fst.txt
+        Fst pt0 = Convert.importFst("pt0");
+        assertTrue(!Utils.isLocallyThresholdTestable(pt0));
     }
 
     /**

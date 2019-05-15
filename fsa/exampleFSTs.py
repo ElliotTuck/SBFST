@@ -25,7 +25,8 @@ d = A("d")
 
 
 def lg_containing_str(x,i):
-    return (sigma4Star + pynini.closure(b,i,i) + sigma4Star).minimize()
+    # return (sigma4Star + pynini.closure(b,i,i) + sigma4Star).minimize()
+    return (sigma4Star + pynini.closure(x,i,i) + sigma4Star).minimize()
 
 def lg_containing_ssq(x,i):
     return (pynini.closure(sigma4Star + x + sigma4Star,i,i)).minimize()
@@ -68,6 +69,9 @@ lt[2] = pynini.intersect(lg_containing_str(b,4), lg_containing_str(a,4))
 # LT8 , if b^8 then a^8 (~~~ not b^8 or a^8)
 lt[3] = (sigma4Star - lg_containing_str(b,8)) | lg_containing_str(a,8)
 
+# aa and ab substrings
+lt[4] = pynini.intersect(lg_containing_str(a, 2), lg_containing_str(a + b, 1))
+
 ###############
 # PT Examples #
 ###############
@@ -85,6 +89,9 @@ pt[2] = pynini.intersect(lg_containing_ssq(b,4), lg_containing_ssq(a,4))
         
 # PT8 , if b^8 then a^8 (~~~ not b^8 or a^8)
 pt[3] = (sigma4Star - lg_containing_ssq(b,8)) | lg_containing_ssq(a,8)
+
+# aa and ab subsequences
+pt[4] = pynini.intersect(lg_containing_ssq(a, 2), sigma4Star + a + sigma4Star + b + sigma4Star)
 
 
 ################

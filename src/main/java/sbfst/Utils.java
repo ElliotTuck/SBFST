@@ -192,17 +192,26 @@ public class Utils {
             return false;
         }
 
+        // debugging printout
+        System.out.println("passed lemma 12");
+
         // check definition 15
         if (!checkDefinition15(dfa, gamma2, gamma3, gammaReachabilityMatrix, gamma2ReachabilityMatrix, gamma2SCCNodes,
                 gamma3SCCNodes, gammaSCCs)) {
             return false;
         }
 
+        // debugging printout
+        System.out.println("passed definition 15");
+
         // check theorem 16
         if (!checkTheorem16(dfa, gamma2, gamma3, gammaReachabilityMatrix, gamma2ReachabilityMatrix, gamma2SCCNodes,
                 gamma3SCCNodes, gammaSCCs)) {
             return false;
         }
+
+        // debugging printout
+        System.out.println("passed theorem 16");
 
         return true;
     }
@@ -356,7 +365,6 @@ public class Utils {
         while (statesToProcess.size() != 0) {
             MutableState stateToProcess = statesToProcess.get(0);
             String label = idToLabel.get(stateToProcess.getId());
-//            System.out.println(label);
             ArrayList<String> newStates = new ArrayList<String>();
             currentStates.clear();
             for (String s : label.split(",")) {
@@ -367,11 +375,8 @@ public class Utils {
                 }
 
             }
-            //System.out.println("Current States: " + currentStates);
             for (MutableState curState : currentStates) {
-//                System.out.println(curState);
                 List<MutableArc> arcs = curState.getArcs();
-                //System.out.println(arcs.size());
                 if (newStates.size() != arcs.size()) {
                     for (int i = 0; i < arcs.size(); i++) {
                         newStates.add("");
@@ -381,7 +386,6 @@ public class Utils {
                 for (int i = 0; i < arcs.size(); i++) {
                     MutableArc arc = arcs.get(i);
                     int pos = arc.getIlabel() - 1;
-                    //System.out.println("ilabel: " + pos);
                     String creatingState = newStates.get(pos).concat(Integer.toString(arc.getNextState().getId()));
                     creatingState = creatingState.concat(",");
                     newStates.remove(pos);
@@ -393,7 +397,6 @@ public class Utils {
             statesToProcess.remove(stateToProcess);
             for (int i = 0; i < newStates.size(); i++) {
                 String nStateName = newStates.get(i);
-//                System.out.println("Found State: " + nStateName);
 
                 MutableState nState = synMonoid.getOrNewState(nStateName);
 
@@ -404,14 +407,12 @@ public class Utils {
                 for (MutableState s : processedStates) {
                     if (idToLabel.get(s.getId()).equals(nStateName)) {
                         foundProcessed = true;
-                        //System.out.println("Is processed");
                         break;
                     }
                 }
                 if (!foundProcessed) {
                     for (MutableState s : statesToProcess) {
                         if (idToLabel.get(s.getId()).equals(nStateName)) {
-                            //System.out.println("Is already in statesToProcess");
                             foundToProcess = true;
                             break;
                         }
@@ -692,7 +693,6 @@ public class Utils {
         // Recur for all the vertices adjacent to this vertex
         for (Arc arc : startState.getArcs()) {
             State adjState = arc.getNextState();
-//            System.out.println("State " + startState.getId() + " is connected to " + adjState.getId());
             if (!visited[adjState.getId()]) {
                 DFS(adjState, visited, result);
             }
@@ -1042,7 +1042,6 @@ public class Utils {
 
       //return nonOrientedFst;
       for (int i = 0; i < nonOrientedFst.getStateCount(); i++){
-//        System.out.println(nonOrientedFst.getStateCount());
         MutableState state = nonOrientedFst.getState(i);
         List<MutableArc> outgoingArcs = state.getArcs();
         for (MutableArc arc: outgoingArcs){
@@ -1103,6 +1102,10 @@ public class Utils {
         // fill in the matrix with the proper values
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
+                if (i == j) {
+                    reachabilityMatrix[i][j] = true;
+                    continue;
+                }
                 State p = dfa.getState(i);
                 State q = dfa.getState(j);
                 reachabilityMatrix[i][j] = isPath(p, q, dfa);
@@ -1114,77 +1117,80 @@ public class Utils {
 
     /**
      * Get the direct product of a state transition graph with itself i-1 times.
-     * @param dfa The input state transition graph.
+     * @param gamma The input state transition graph.
      * @param i The number of copies of dfa to include in the product.
      * @return The direct product of dfa with itself i-1 times.
      */
-    public static Fst directProduct(Fst dfa, int i) {
+    public static Fst directProduct(Fst gamma, int i) {
         if (i < 1) {
             return null;   // TODO: handle the invalid input in a better way
         }
 
         if (i == 1) {
-            return dfa;
+            return gamma;
         }
 
-        Fst productGraph = new MutableFst();
-        ((MutableFst) productGraph).useStateSymbols();
+        // create an empty product graph
+        MutableFst productGraph = new MutableFst();
+        productGraph.useStateSymbols();
 
         // get the new state symbols of the product graph
-        Iterable<String> stateSyms = dfa.getStateSymbols().symbols();
-        List<String> stateSymsList = new ArrayList<>();
-        for (String stateSym : stateSyms) {
-            stateSymsList.add(stateSym);
+        Iterable<String> gammaStateSyms = gamma.getStateSymbols().symbols();
+        List<String> gammaStateSymsList = new ArrayList<>();
+        for (String stateSym : gammaStateSyms) {
+            gammaStateSymsList.add(stateSym);
         }
-        List<String> productGraphStateSymbols = getProductGraphStateSymbols(stateSymsList, i);
+        List<String> productGraphStateSymbols = getProductGraphStateSymbols(gammaStateSymsList, i);
         for (String stateSym : productGraphStateSymbols) {
-            ((MutableFst) productGraph).addState(new MutableState(), stateSym);
+            productGraph.addState(new MutableState(), stateSym);
         }
 
-        // add transitions to the product graph
+        // add transitions to the product graph by adding the appropriate transitions between each pair of states
+        SymbolTable.InvertedSymbolTable gammaInputSyms = gamma.getInputSymbols().invert();
+        SymbolTable.InvertedSymbolTable productGraphStateSyms = productGraph.getStateSymbols().invert();
         for (int j = 0; j < productGraph.getStateCount(); j++) {
             for (int k = 0; k < productGraph.getStateCount(); k++) {
-                String startStateSym = productGraph.getStateSymbols().invert().keyForId(j);
+                String startStateSym = productGraphStateSyms.keyForId(j);
                 String[] originalStartStateSyms = startStateSym.split(DELIMITER);
 
-                String endStateSym = productGraph.getStateSymbols().invert().keyForId(k);
+                String endStateSym = productGraphStateSyms.keyForId(k);
                 String[] originalEndStateSyms = endStateSym.split(DELIMITER);
 
-                // add a transition with label sigma between two states in the product graph only if there is a
-                // transition labeled sigma between states p and q for each pair of states in the original graph with
-                // corresponding state symbols from the list of symbols that make up the two state in the product graph
-                for (String transitionSym : dfa.getInputSymbols().symbols()) {
+                // for the current two product graph states (p1,p2,...,pn) and (q1,q2,...,qn), add a transition from
+                // (p1,p2,...,pn) -> (q1,q2,...,qn) labeled by sigma iff the transitions p1 -> q1, p2 -> q2, ...,
+                // pn -> qn all exist in the original state transition graph and are labeled by sigma
+                for (String transitionSym : gamma.getInputSymbols().symbols()) {
                     boolean shouldAddArc = true;
-                    for (int m = 0; m < originalStartStateSyms.length; m++) {
-                        State originalGraphP = dfa.getState(originalStartStateSyms[m]);
-                        State originalGraphQ = dfa.getState(originalEndStateSyms[m]);
+                    for (int m = 0; m < i; m++) {
+                        State originalGraphP = gamma.getState(originalStartStateSyms[m]);
+                        State originalGraphQ = gamma.getState(originalEndStateSyms[m]);
 
                         boolean foundArcWithTransitionSym = false;
                         for (Arc arc : originalGraphP.getArcs()) {
                             if (arc.getNextState().equals(originalGraphQ) &&
-                                    dfa.getInputSymbols().invert().keyForId(arc.getIlabel()).equals(transitionSym)) {
+                                    gammaInputSyms.keyForId(arc.getIlabel()).equals(transitionSym)) {
                                 foundArcWithTransitionSym = true;
                                 break;
                             }
                         }
 
                         if (!foundArcWithTransitionSym) {
-                            // did not find transition labeled transitionSym from p to q in original graph, so we should
-                            // not add a corresponding arc in the product graph
+                            // did not find transition p_i -> q_i labeled by transitionSym, so we should
+                            // not add the corresponding arc in the product graph
                             shouldAddArc = false;
                             break;
                         }
                     }
                     if (shouldAddArc) {
-                        ((MutableFst) productGraph).addArc(((MutableFst) productGraph).getState(j), transitionSym,
-                                transitionSym, ((MutableFst) productGraph).getState(k), 0);
+                        productGraph.addArc(productGraph.getState(j), transitionSym, transitionSym,
+                                productGraph.getState(k), 0);
                     }
                 }
             }
         }
 
         // here's that hack again
-        ((MutableFst) productGraph).setStart(((MutableFst) productGraph).getState(0));
+        productGraph.setStart(productGraph.getState(0));
 
         return productGraph;
     }
@@ -1223,9 +1229,6 @@ public class Utils {
      * @return true if no such p and q are found, false otherwise
      */
     public static boolean checkPQReachability(Fst gamma, Fst gamma2, boolean[][] g1Reachability, boolean[] gamma2SCCNodes){
-        // Question: are we assuming all nodes of gamma2 are "SCC nodes"?
-        // Elliot: I added an input that should allow us to check if a node of Γ​² is an SCC node
-
         SymbolTable gamma2SymbolTable = gamma2.getStateSymbols();
 
         for (int i = 0; i < gamma2.getStateCount(); i++){
@@ -1256,10 +1259,10 @@ public class Utils {
      * if true, make TSCC(p, q, r, r1)
      * if TSCC is not well defined return false
      * @param gamma FST of Γ
-     * @param gamma2 FST of Γ^2
-     * @param gamma3 FST of Γ^3
+     * @param gamma2 FST of Γ​​²
+     * @param gamma3 FST of Γ³
      * @param g1Reachability reachability matrix for Γ
-     * @param g2Reachability reachability matrix for Γ^2
+     * @param g2Reachability reachability matrix for Γ²
      * @param gamma2SCCNodes Marks which nodes in Γ² are SCC nodes
      * @param gamma3SCCNodes Marks which nodes in Γ³ are SCC nodes
      * @param gammaSCCs The SCCs of Γ
@@ -1273,23 +1276,32 @@ public class Utils {
             for (int q = 0; q < n; q++){
                 for (int r = 0; r < n; r++){
                     for (int r1 = 0; r1 < n; r1++){
-                        // Question: do we not continue this iteration if this is not true??
-                        // ensure reachability from p to r, r to r1, and p to q
+                        // ensure reachability from p to r, r to r1, and p to q before finding TSCC(p,q,r,r1)
                         boolean pathFromPtoR = g1Reachability[p][r];
                         boolean pathFromRtoR1 = g1Reachability[r][r1];
                         boolean pathFromPtoQ = g1Reachability[p][q];
-
-                        // only consider the positive cases where p -> r -> r1 and p -> q
                         if (!pathFromPtoR || !pathFromRtoR1 || !pathFromPtoQ) {
                             continue;
                         }
 
-                        // TSCC(p,q,r,r1) must be well defined
+                        // ensure (p,r1) and (q,r) are SCC-nodes
+                        SymbolTable.InvertedSymbolTable gammaStateSyms = gamma.getStateSymbols().invert();
+                        String pAndr1Sym = gammaStateSyms.keyForId(p) + DELIMITER + gammaStateSyms.keyForId(r1);
+                        String qAndrSym = gammaStateSyms.keyForId(q) + DELIMITER + gammaStateSyms.keyForId(r);
+                        int pAndr1Index = gamma2.getState(pAndr1Sym).getId();
+                        int qAndrIndex = gamma2.getState(qAndrSym).getId();
+                        if (!gamma2SCCNodes[pAndr1Index] || !gamma2SCCNodes[qAndrIndex]) {
+                            continue;
+                        }
+
+                        // find TSCC(p,q,r,r1) and ensure that it is well defined
                         ArrayList<State> TSCC = getTSCC(p, q, r, r1, gamma, gamma2, gamma3, g1Reachability,
                                 g2Reachability, gamma2SCCNodes, gamma3SCCNodes, gammaSCCs);
-                        if (TSCC == null){
+                        if (TSCC == null) {
                             return false;
                         }
+
+                        // check the next set of states
                     }
                 }
             }
@@ -1335,33 +1347,55 @@ public class Utils {
                                 continue;
                             }
 
+                            // make sure (p,r1) and (q,r) are SCC-nodes
+                            SymbolTable.InvertedSymbolTable gammaStateSyms = gamma.getStateSymbols().invert();
+                            String pAndr1Sym = gammaStateSyms.keyForId(p) + DELIMITER + gammaStateSyms.keyForId(r1);
+                            String qAndrSym_test = gammaStateSyms.keyForId(q) + DELIMITER + gammaStateSyms.keyForId(r);
+                            int pAndr1Index = gamma2.getState(pAndr1Sym).getId();
+                            int qAndrIndex = gamma2.getState(qAndrSym_test).getId();
+                            if (!gamma2SCCNodes[pAndr1Index] || !gamma2SCCNodes[qAndrIndex]) {
+                                continue;
+                            }
+
+                            // make sure (p,q1) and (r,q) are SCC-nodes
+                            String pAndq1Sym = gammaStateSyms.keyForId(p) + DELIMITER + gammaStateSyms.keyForId(q1);
+                            String rAndqSym = gammaStateSyms.keyForId(r) + DELIMITER + gammaStateSyms.keyForId(q);
+                            int pAndq1Index = gamma2.getState(pAndq1Sym).getId();
+                            int rAndqIndex = gamma2.getState(rAndqSym).getId();
+                            if (!gamma2SCCNodes[pAndq1Index] || !gamma2SCCNodes[rAndqIndex]) {
+                                continue;
+                            }
+
                             // only continue checking if TSCC(p,q,r,r1) and TSCC(p,r,q,q1) are well defined
                             ArrayList<State> TSCCpqrr1 = getTSCC(p, q, r, r1, gamma, gamma2, gamma3, g1Reachability,
                                     g2Reachability, gamma2SCCNodes, gamma3SCCNodes, gammaSCCs);
                             ArrayList<State> TSCCprqq1 = getTSCC(p, r, q, q1, gamma, gamma2, gamma3, g1Reachability,
                                     g2Reachability, gamma2SCCNodes, gamma3SCCNodes, gammaSCCs);
                             if (TSCCpqrr1 == null || TSCCprqq1 == null) {
-//                                return false;
+                                // debugging printout
+                                System.out.println("TSCC(p,q,r,r1) and/or TSCC(p,r,q,q1) is null");
+
                                 continue;
                             }
 
                             // only continue checking if (p,q1,r1) is an SCC-node
-                            SymbolTable.InvertedSymbolTable gammaSyms = gamma.getStateSymbols().invert();
-                            String pAndq1Andr1Sym = gammaSyms.keyForId(p) + DELIMITER + gammaSyms.keyForId(q1) +
-                                    DELIMITER + gammaSyms.keyForId(r1);
+                            String pAndq1Andr1Sym = gammaStateSyms.keyForId(p) + DELIMITER +
+                                    gammaStateSyms.keyForId(q1) + DELIMITER + gammaStateSyms.keyForId(r1);
                             int pAndq1Andr1Index = gamma3.getState(pAndq1Andr1Sym).getId();
                             if (!gamma3SCCNodes[pAndq1Andr1Index]) {
-//                                return false;
+                                // debugging printout
+                                System.out.println("(p,q,r1) is not an SCC-node");
+
                                 continue;
                             }
 
                             // only continue checking if (q1,r1) is reachable from (q,r)
-                            String qAndrSym = gammaSyms.keyForId(q) + DELIMITER + gammaSyms.keyForId(r);
-                            String q1Andr1Sym = gammaSyms.keyForId(q1) + DELIMITER + gammaSyms.keyForId(r1);
-                            int qAndrIndex = gamma2.getState(qAndrSym).getId();
+                            String q1Andr1Sym = gammaStateSyms.keyForId(q1) + DELIMITER + gammaStateSyms.keyForId(r1);
                             int q1Andr1Index = gamma2.getState(q1Andr1Sym).getId();
                             if (!g2Reachability[qAndrIndex][q1Andr1Index]) {
-//                                return false;
+                                // debugging printout
+                                System.out.println("(q1,r1) is not reachable from (q,r)");
+
                                 continue;
                             }
 
@@ -1369,6 +1403,9 @@ public class Utils {
                             Set<State> TSCCpqrr1Set = new HashSet<>(TSCCpqrr1);
                             Set<State> TSCCprqq1Set = new HashSet<>(TSCCprqq1);
                             if (!TSCCpqrr1Set.equals(TSCCprqq1Set)) {
+                                // debugging printout
+                                System.out.println("TSCC(p,q,r,r1) != TSCC(p,r,q,q1)");
+
                                 return false;
                             }
                         }
@@ -1383,19 +1420,19 @@ public class Utils {
     /**
      * Make TSCC of all nodes t in gamma such that
      * (q, t) is reachable from (p,r1) and (q, r, t) and (p, r1) are SCC nodes
-     * @param p
-     * @param q
-     * @param r
-     * @param r1
+     * @param p Index of state p
+     * @param q Index of state q
+     * @param r Index of state r
+     * @param r1 Index of state r1
      * @param gamma FST of Γ
-     * @param gamma2 FST of Γ^2
-     * @param gamma3 FST of Γ^3
+     * @param gamma2 FST of Γ²
+     * @param gamma3 FST of Γ³
      * @param g1Reachability Reachability matrix for Γ
-     * @param g2Reachability reachability matrix for Γ^2
-     * @param gamma2SCCNodes Marks which nodes in Γ² are SCC nodes
-     * @param gamma3SCCNodes Marks which nodes in Γ³ are SCC nodes
+     * @param g2Reachability Reachability matrix for Γ²
+     * @param gamma2SCCNodes Marks which nodes in Γ² are SCC-nodes
+     * @param gamma3SCCNodes Marks which nodes in Γ³ are SCC-nodes
      * @param gammaSCCs The SCCs of Γ
-     * @return TSCC as a list of states, or null if it is not well defined
+     * @return TSCC(p,q,r,r1) as a list of states, or null if it is not well defined
      */
     private static ArrayList<State> getTSCC(int p, int q, int r, int r1, Fst gamma, Fst gamma2, Fst gamma3,
                                             boolean[][] g1Reachability, boolean[][] g2Reachability,
@@ -1406,16 +1443,28 @@ public class Utils {
         boolean pathFromRtoR1 = g1Reachability[r][r1];
         boolean pathFromPtoQ = g1Reachability[p][q];
         if (!pathFromPtoR || !pathFromRtoR1 || !pathFromPtoQ) {
+            // debugging printout
+            System.out.println("reachability condition failed in getTSCC");
+
             return null;
         }
 
         // make sure (p,r1) and (q,r) are SCC-nodes
-        SymbolTable.InvertedSymbolTable gammaSyms = gamma.getStateSymbols().invert();
-        String pAndr1Sym = gammaSyms.keyForId(p) + DELIMITER + gammaSyms.keyForId(r1);
-        String qAndrSym = gammaSyms.keyForId(q) + DELIMITER + gammaSyms.keyForId(r);
+        SymbolTable.InvertedSymbolTable gammaStateSyms = gamma.getStateSymbols().invert();
+        String pAndr1Sym = gammaStateSyms.keyForId(p) + DELIMITER + gammaStateSyms.keyForId(r1);
+        String qAndrSym = gammaStateSyms.keyForId(q) + DELIMITER + gammaStateSyms.keyForId(r);
         int pAndr1Index = gamma2.getState(pAndr1Sym).getId();
         int qAndrIndex = gamma2.getState(qAndrSym).getId();
         if (!gamma2SCCNodes[pAndr1Index] || !gamma2SCCNodes[qAndrIndex]) {
+            // debugging printout
+            System.out.println("SCC-node condition failed in getTSCC");
+            System.out.println("p: " + p);
+            System.out.println("q: " + q);
+            System.out.println("r: " + r);
+            System.out.println("r1: " + r1);
+            System.out.println("(p,r1): " + pAndr1Sym);
+            System.out.println("(q,r): " + qAndrSym);
+
             return null;
         }
 
@@ -1424,12 +1473,13 @@ public class Utils {
         for (int t = 0; t < gamma.getStateCount(); t++){
             // id1 =  q,t id from statesymbols
             // id2 =  p,r1 id from statesymbols
-            String gamma2StartStateSym = gammaSyms.keyForId(p) + DELIMITER + gammaSyms.keyForId(r1);
-            String gamma2EndStateSym = gammaSyms.keyForId(q) + DELIMITER + gammaSyms.keyForId(t);
+            String gamma2StartStateSym = gammaStateSyms.keyForId(p) + DELIMITER + gammaStateSyms.keyForId(r1);
+            String gamma2EndStateSym = gammaStateSyms.keyForId(q) + DELIMITER + gammaStateSyms.keyForId(t);
             int id2 = gamma2.getState(gamma2StartStateSym).getId();
             int id1 = gamma2.getState(gamma2EndStateSym).getId();
 
-            String gamma3StateSym = gammaSyms.keyForId(q) + DELIMITER + gammaSyms.keyForId(r) + DELIMITER + gammaSyms.keyForId(t);
+            String gamma3StateSym = gammaStateSyms.keyForId(q) + DELIMITER + gammaStateSyms.keyForId(r) + DELIMITER +
+                    gammaStateSyms.keyForId(t);
             int gamma3StateIndex = gamma3.getState(gamma3StateSym).getId();
 
             if (g2Reachability[id2][id1] && gamma3SCCNodes[gamma3StateIndex]) {
@@ -1443,6 +1493,8 @@ public class Utils {
                 return gammaSCC;
             }
         }
+
+        System.out.println("couldn't find SCC that contained all states t in getTSCC");
 
         return null;
     }
@@ -1464,6 +1516,7 @@ public class Utils {
         ArrayList<ArrayList<State>> SCCs = getSCCs(dfa);
         for (int i = 0; i < ans.length; i++) {
             State s = dfa.getState(i);
+
             for (ArrayList<State> SCC : SCCs) {
                 if (SCC.contains(s)) {
                     ans[i] = true;
