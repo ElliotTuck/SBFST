@@ -1,6 +1,6 @@
 # SBFST - Classify the Language of Your DFA
 
-The SBFST library lets you further classify your regular language as star free (SF) or locally testable (LT) (keep an eye out for more classes coming soon! :eyes:).
+The SBFST library lets you further classify your regular language as star free (SF), locally testable (LT), or piecewise testable (PT) (keep an eye out for more classes coming soon! :eyes:).
 
 ### Usage
 
