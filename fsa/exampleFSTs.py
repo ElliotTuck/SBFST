@@ -22,14 +22,28 @@ b = A("b")
 c = A("c")
 d = A("d")
 
+# define simpler sigma and sigmastar
+sigma2 = zero
+for x in "ab": sigma2 = A(x) | sigma2
+sigma2.optimize()
+sigma2Star = sigma2.star.optimize()
 
 
 def lg_containing_str(x,i):
     # return (sigma4Star + pynini.closure(b,i,i) + sigma4Star).minimize()
     return (sigma4Star + pynini.closure(x,i,i) + sigma4Star).minimize()
 
+
 def lg_containing_ssq(x,i):
     return (pynini.closure(sigma4Star + x + sigma4Star,i,i)).minimize()
+
+
+def lg_with_str(sigmastar, x, i):
+    return (sigmastar + pynini.closure(x, i, i) + sigmastar).minimize()
+
+
+def lg_with_ssq(sigmastar, x, i):
+    return (pynini.closure(sigmastar + x + sigmastar, i, i)).minimize()
 
 
 ###############
@@ -72,6 +86,9 @@ lt[3] = (sigma4Star - lg_containing_str(b,8)) | lg_containing_str(a,8)
 # aa and ab substrings
 lt[4] = pynini.intersect(lg_containing_str(a, 2), lg_containing_str(a + b, 1))
 
+# aa and ab substrings (using sigma = {a,b})
+lt[5] = pynini.intersect(lg_with_str(sigma2Star, a, 2), lg_with_str(sigma2Star, a + b, 1))
+
 ###############
 # PT Examples #
 ###############
@@ -92,6 +109,9 @@ pt[3] = (sigma4Star - lg_containing_ssq(b,8)) | lg_containing_ssq(a,8)
 
 # aa and ab subsequences
 pt[4] = pynini.intersect(lg_containing_ssq(a, 2), sigma4Star + a + sigma4Star + b + sigma4Star)
+
+# aa and ab subsequences (using sigma = {a,b})
+pt[5] = pynini.intersect(lg_with_ssq(sigma2Star, a, 2), sigma2Star + a + sigma2Star + b + sigma2Star)
 
 
 ################

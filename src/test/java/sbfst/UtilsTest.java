@@ -539,9 +539,19 @@ public class UtilsTest {
      */
     @Test
     public void testGeneral() {
-        // lt0.fst.txt
-        Fst gamma = Convert.importFst("lt0");
-        Fst gamma2 = Utils.directProduct(gamma, 2);
-        Convert.export(gamma2, "lt0_2");
+//        // lt0.fst.txt
+//        Fst gamma = Convert.importFst("lt0");
+//        Fst gamma2 = Utils.directProduct(gamma, 2);
+//        Convert.export(gamma2, "lt0_2");
+
+        // test_s_local.fst.txt
+        Fst slocal = Convert.importFst("test_s_local");
+        Set<State> q1 = new HashSet<>();
+        q1.add(slocal.getState(0));
+        q1.add(slocal.getState(1));
+        Fst pairgraph = Utils.getPairGraph(slocal, q1, q1);
+        ((MutableFst) pairgraph).setStart(((MutableFst) pairgraph).getState(0));
+        System.out.println(pairgraph.getStateCount());
+        Convert.export(pairgraph, "src/test/resources/test_s_local_pairgraph");
     }
 }
