@@ -158,20 +158,20 @@ def create_adversarial_data(filename, pos_dict, neg_dict, min_len, max_len, num)
                 print('one edit distance:' + ele)
                 print(list_string_set(temp_fsa))
 #                temp_res = list(set(list_string_set(one_edit_dist_fsa)) & set(list_string_set(neg_dict[i])))
-                temp_res = list_string_set(temp_fsa)
+                temp_res = \
+                    list_string_set(pynini.randgen(temp_fsa, npath=1, seed=0, select="uniform", max_length=2147483647, weighted=False))
                 if not temp_res:
                     continue
                 else:
                     f.write(ele + "\t" + "True\n")
-                    rand_one_edit_dist_neg = \
-                        pynini.randgen(temp_fsa, npath=1, seed=0, select="uniform", max_length=2147483647, weighted=False)
-                    f.write(rand_one_edit_dist_neg + "\t" + "False\n")
+                    f.write(temp_res[0] + "\t" + "False\n")
 
 
 # define FSA
 
-my_fsa = A("a").closure() | A("b").closure() | A("c").closure()
-
+# my_fsa = A("a").closure() | A("b").closure() | A("c").closure()
+path_to_fsa = "lt0.fsa"
+my_fsa = pynini.Fst.read(path_to_fsa)
 
 # define hyper-parameters
 
