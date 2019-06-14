@@ -72,7 +72,7 @@ def get_pos_string(fsa, min_len, max_len):
     fsa_dict = {}
     for i in range(min_len, max_len + 1):
         fsa_dict[i] = pynini.intersect(fsa, pynini.closure(sigma, i, i))
-        print(list_string_set(fsa_dict[i]))
+        # print(list_string_set(fsa_dict[i]))
     return fsa_dict
 
 
@@ -83,7 +83,7 @@ def get_neg_string(fsa, min_len, max_len):
     fsa_dict = {}
     for i in range(min_len, max_len + 1):
         fsa_dict[i] = pynini.difference(pynini.closure(sigma, i, i), fsa)
-        print(list_string_set(fsa_dict[i]))
+        # print(list_string_set(fsa_dict[i]))
     return fsa_dict
 
 
@@ -127,19 +127,22 @@ def create_data_no_duplicate(filename, pos_dict, neg_dict, min_len, max_len, num
 # This may be duplicates.
 
 
-def create_data_with_duplicate(filename, pos_dict, neg_dict, min_len, max_len, num):
-    result = []
+def create_data_with_duplicate(filename, pos_dict, neg_dict, min_len, max_len, num, get_difference):
     with open(filename, "w+") as f:
         for i in range(min_len, max_len + 1):
             pos_fsa = \
                 pynini.randgen(pos_dict[i], npath=num, seed=0, select="uniform", max_length=2147483647, weighted=False)
+            if get_difference == 1:
+                pos_dict[i] = pynini.difference(pos_dict[i], pos_fsa)
             for ele in list_string_set(pos_fsa):
                 f.write(ele + "\t" + "True\n")
             neg_fsa = \
                 pynini.randgen(neg_dict[i], npath=num, seed=0, select="uniform", max_length=2147483647, weighted=False)
+            if get_difference == 1:
+                neg_dict[i] = pynini.difference(neg_dict[i], neg_fsa)
             for ele in list_string_set(neg_fsa):
                 f.write(ele + "\t" + "False\n")
-    return result
+    return pos_dict, neg_dict
 
 
 # create adversarial pairs
@@ -155,8 +158,8 @@ def create_adversarial_data(filename, pos_dict, neg_dict, min_len, max_len, num)
                     temp_fsa = temp_fsa | pynini.compose(one_edit_dist_fsa, neg_dict[i - 1])
                 if i + 1 <= max_len:
                     temp_fsa = temp_fsa | pynini.compose(one_edit_dist_fsa, neg_dict[i + 1])
-                print('one edit distance:' + ele)
-                print(list_string_set(temp_fsa))
+#                print('one edit distance:' + ele)
+#                print(list_string_set(temp_fsa))
 #                temp_res = list(set(list_string_set(one_edit_dist_fsa)) & set(list_string_set(neg_dict[i])))
                 temp_res = \
                     list_string_set(pynini.randgen(temp_fsa, npath=1, seed=0, select="uniform", max_length=2147483647, weighted=False))
@@ -170,22 +173,22 @@ def create_adversarial_data(filename, pos_dict, neg_dict, min_len, max_len, num)
 # define FSA
 
 # my_fsa = A("a").closure() | A("b").closure() | A("c").closure()
-path_to_fsa = "lt0.fsa"
+path_to_fsa = "sp1.fsa"
 my_fsa = pynini.Fst.read(path_to_fsa)
 
 # define hyper-parameters
 
-ss_min_len = 2
-ss_max_len = 4
-train_pos_num = 5
-dev1_pos_num = 3
-test1_pos_num = 4
-dev2_pos_num = 3
-test2_pos_num = 4
-ls_min_len = 5
-ls_max_len = 7
-test3_pos_num = 4
-test4_pos_num = 4
+ss_min_len = 10
+ss_max_len = 19
+train_pos_num = 50
+dev1_pos_num = 50
+test1_pos_num = 50
+dev2_pos_num = 50
+test2_pos_num = 50
+ls_min_len = 31
+ls_max_len = 50
+test3_pos_num = 25
+test4_pos_num = 25
 
 
 # generate short strings and construct a dictionary where
@@ -197,12 +200,13 @@ neg_dict = get_neg_string(my_fsa, ss_min_len, ss_max_len)
 
 # create training data with duplicates
 
-train = create_data_with_duplicate("train.txt", pos_dict, neg_dict, ss_min_len, ss_max_len, train_pos_num)
+pos_dict, neg_dict = \
+    create_data_with_duplicate("train.txt", pos_dict, neg_dict, ss_min_len, ss_max_len, train_pos_num, 1)
 
 
 # create dev_1 and test_1 (with duplicates)
-create_data_with_duplicate("dev_1.txt", pos_dict, neg_dict, ss_min_len, ss_max_len, dev1_pos_num)
-create_data_with_duplicate("test_1.txt", pos_dict, neg_dict, ss_min_len, ss_max_len, test1_pos_num)
+create_data_with_duplicate("dev_1.txt", pos_dict, neg_dict, ss_min_len, ss_max_len, dev1_pos_num, 0)
+create_data_with_duplicate("test_1.txt", pos_dict, neg_dict, ss_min_len, ss_max_len, test1_pos_num, 0)
 
 
 # create dev_2 and test_2 (no duplicates, no overlap in train/dev/test data)
