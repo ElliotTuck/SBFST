@@ -115,11 +115,11 @@ def create_data_no_duplicate(filename, pos_dict, neg_dict, min_len, max_len, num
             acceptor, results = rand_gen_no_duplicate(pos_dict[i], num)
             pos_dict[i] = acceptor
             for ele in results:
-                f.write(ele + "\t" + "True\n")
+                f.write(ele + "\t" + "TRUE\n")
             acceptor, results = rand_gen_no_duplicate(neg_dict[i], num)
             neg_dict[i] = acceptor
             for ele in results:
-                f.write(ele + "\t" + "False\n")
+                f.write(ele + "\t" + "FALSE\n")
     return pos_dict, neg_dict
 
 
@@ -135,13 +135,13 @@ def create_data_with_duplicate(filename, pos_dict, neg_dict, min_len, max_len, n
             if get_difference == 1:
                 pos_dict[i] = pynini.difference(pos_dict[i], pos_fsa)
             for ele in list_string_set(pos_fsa):
-                f.write(ele + "\t" + "True\n")
+                f.write(ele + "\t" + "TRUE\n")
             neg_fsa = \
                 pynini.randgen(neg_dict[i], npath=num, seed=0, select="uniform", max_length=2147483647, weighted=False)
             if get_difference == 1:
                 neg_dict[i] = pynini.difference(neg_dict[i], neg_fsa)
             for ele in list_string_set(neg_fsa):
-                f.write(ele + "\t" + "False\n")
+                f.write(ele + "\t" + "FALSE\n")
     return pos_dict, neg_dict
 
 
@@ -166,8 +166,8 @@ def create_adversarial_data(filename, pos_dict, neg_dict, min_len, max_len, num)
                 if not temp_res:
                     continue
                 else:
-                    f.write(ele + "\t" + "True\n")
-                    f.write(temp_res[0] + "\t" + "False\n")
+                    f.write(ele + "\t" + "TRUE\n")
+                    f.write(temp_res[0] + "\t" + "FALSE\n")
 
 
 # define FSA
