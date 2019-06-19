@@ -94,15 +94,22 @@ def get_neg_string(fsa, min_len, max_len):
 
 
 def rand_gen_no_duplicate(acceptor, n):
-    rand_str = []
-    for i in range(n):
-        temp = pynini.randgen(acceptor, npath=1, seed=0, select="uniform", max_length=2147483647, weighted=False)
-        if not list_string_set(temp):
-            break
+    loop = 10
+    for i in range(loop):
+        num = int(n + n*i*0.1)
+        temp = pynini.randgen(acceptor, npath=num, seed=0, select="uniform", max_length=2147483647, weighted=False)
+        rand_list = list_string_set(temp)
+        rand_list = list(set(rand_list))
+        uniq_len = len(rand_list)
+        if uniq_len < n and i < loop - 1:
+            print('insufficient random strings')
+            continue
         else:
-            rand_str = rand_str + list_string_set(temp)
+            random.shuffle(rand_list)
+            rand_list = rand_list[:n]
+            rand_list.sort()
             acceptor = pynini.difference(acceptor, temp)
-    return acceptor, rand_str
+            return acceptor, rand_list
 
 
 # Create {num} positive and negative examples from fsa.
